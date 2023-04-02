@@ -34,7 +34,7 @@ Optional Variables
 |rhpds_ssh_public_key_path|string|yes|"{{ rhpds_ssh_private_key_path + '.pub' }}"|-|
 |tf_project_dir|string|yes|terraform|-|
 |vm_count|string|yes|'3'|-|
-|workgroup|string|yes|-|{rhcsa|rhce}|
+|workgroup|string|yes|-|{rhcsa\|rhce}|
 
 
 
