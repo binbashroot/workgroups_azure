@@ -1,0 +1,187 @@
+---
+# tasks file for deploy_rhcsa_client
+- name: 'Create nfs users for {{ item }}'
+  ansible.builtin.user:
+    name: "{{ item['name'] }}"
+    home: "/export/home/{{ item['name'] }}"
+  loop: "{{ nfs_users }}"
+
+- name: Create /etc/httpd/conf.d directory
+  ansible.builtin.file:
+    path: /etc/httpd/conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+    seuser: system_u
+    serole: object_r
+    setype: httpd_config_t
+
+- name: Create custom userdir.conf for use with httpd 
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/etc/httpd/conf.d/{{ item }}"
+    mode: 0644
+    owner: root
+    group: root
+    seuser: system_u
+    serole: object_r
+    setype: httpd_config_t
+  loop: 
+     - userdir.conf
+     - autoindex.conf
+
+- name: Remove all files for larry moe and curly users
+  ansible.builtin.file:
+    path: "/export/home/{{ (item[0])['name'] }}/{{ item[1] }}"
+    state: absent
+  vars:
+    filelist:
+      - .profile
+      - .bash_profile
+      - .bashrc
+      - .bash_logout
+  loop: "{{ nfs_users|product(filelist)|list  }}"
+
+- name: Set fact for random password
+  ansible.builtin.set_fact:
+    rootpass: "{{ word + number }}"    
+
+- name: Write a password to file
+  ansible.builtin.copy:
+    content: |
+      {{ item['pass'] }}
+    dest: "/root/{{ item['name'] }}_password"
+    mode: 0644
+  loop: 
+      -  { name: 'root', pass: "{{ rootpass }}" }
+
+- name: Create 3 random named files that are owned by larry
+  ansible.builtin.shell: |
+    fallocate -l {{ item['size'] }} {{ item['path'] }}
+    chown larry:larry {{ item['path'] }}
+    chmod 0644 {{ item['path'] }}
+  loop:
+    - { path: "/usr/local/etc/{{ word }}.txt", size: 10M }
+    - { path: "/usr/lib/locale/{{ word }}.foo", size: 5M }
+    - { path: "/etc/{{ word }}.txt", size: 3M }
+
+- name: Create /opt/test1 and /opt/test2
+  ansible.builtin.file:
+    path: "/opt/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0600
+  loop:
+    - test1
+    - test2
+    - test3
+
+- name: Create 5 random text files in /opt/test1
+  ansible.builtin.copy:
+    content: |
+      {{ lookup('community.general.random_string', length=28,special=false,numbers=false) }}
+    dest: "/opt/test1/{{ lookup('community.general.random_string', length=8, special=false, numbers=false)[0:-1] }}.txt"
+    mode: 0644
+    owner: nobody
+    group: nobody
+  loop: "{{ range(1,6)|list }}"
+
+- name: Create 5 random text files in /opt/test2
+  ansible.builtin.copy:
+    content: |
+      {{ lookup('community.general.random_string', length=28,special=false,numbers=false) }}
+    dest: "/opt/test2/{{ lookup('community.general.random_string', length=8, special=false, numbers=false)[0:-1] }}.log"
+    mode: 0755
+    owner: student
+    group: student
+  loop: "{{ range(1,6)|list }}"
+
+- name: Create 10 random text files in /opt/test3
+  ansible.builtin.copy:
+    content: |
+      {{ lookup('community.general.random_string', length=108,special=false,numbers=false) }}
+    dest: "/opt/test3/{{ lookup('community.general.random_string', length=15, special=false, numbers=false)[0:-1] }}.out"
+    mode: 0755
+    owner: student
+    group: student 
+  loop: "{{ range(1,11)|list }}"
+
+- name: Install a basic index.html file
+  ansible.builtin.file:
+    path: "{{ item['path'] }}"
+    state: "{{ item['state'] }}"
+    owner: root
+    group: root
+    mode: "{{ item['mode'] }}"
+  loop:
+    - { path: /var/www/html/exercise, state: directory, mode: '0755' }
+    - { path: /var/www/html/webfiles, state: directory, mode: '0755' }
+    - { path: /var/www/html/exercise/index.html, state: touch ,mode: '0644' }
+
+- name: create a validation index.html file
+  ansible.builtin.copy:
+    content: |
+      Congratulations, you have a working web page
+    dest: /var/www/html/exercise/index.html
+    mode: 0644
+    owner: root
+    group: root
+    setype: ssh_home_t
+
+- name: Get the tasks
+  ansible.builtin.uri:
+    url: https://raw.githubusercontent.com/binbashroot/rhcsa_practice/main/README.md
+    method: GET
+    return_content: yes
+    user: binbashroot
+    force_basic_auth: true
+    headers:
+      Authorization: "Bearer {{ lookup('env','GITHUB_TOKEN') }}"
+  register: __tasks_download
+
+- name: Copy the tasks
+  ansible.builtin.copy:
+    content: |
+      {{ __tasks_download['content'] }}
+    dest: /home/student/tasks
+    owner: student
+    group: student
+    mode: 0644
+
+- name: Remove repo file
+  ansible.builtin.file:
+    path: /etc/yum.repos.d/redhat.repo
+    state: absent
+
+- name: Set SELinux to permissiive 
+  ansible.builtin.lineinfile:
+    path: /etc/sysconfig/selinux
+    regexp: '^SELINUX=(.*)'
+    line: 'SELINUX=permissive'
+  when: keep_orig is undefined
+
+- name: Remove Chrony
+  ansible.builtin.dnf:
+    name: chrony
+    state: absent
+
+- name: Create an empty chrony file
+  ansible.builtin.copy:
+    content: |
+        # Add pool 
+        # Defaults
+        sourcedir /run/chrony-dhcp
+        driftfile /var/lib/chrony/drift
+        makestep 1.0 3
+        rtcsync
+        keyfile /etc/chrony.keys
+        ntsdumpdir /var/lib/chrony
+        leapsectz right/UTC
+        logdir /var/log/chrony
+    dest: /etc/chrony.conf
+    setype: etc_t
+    owner: root
+    group: root
+    mode: 0644

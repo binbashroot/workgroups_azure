@@ -1,0 +1,8 @@
+{% for host in groups['all'] %}
+{{ hostvars[host]['ansible_facts']['eth0']['ipv4']['address'] }} {{ hostvars[host]['ansible_facts']['hostname'] }} {{ hostvars[host]['ansible_facts']['hostname'] }}.example.com
+{% endfor %}
+{% if groups['rhcsa_reposerver'] is defined %}
+{% for host in groups['rhcsa_reposerver'] %}
+{{ hostvars[host]['ansible_facts']['eth0']['ipv4']['address'] }} reposerver.example.com
+{% endfor %}
+{% endif %}

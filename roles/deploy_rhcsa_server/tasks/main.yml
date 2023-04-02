@@ -1,0 +1,112 @@
+---
+# tasks file for deploy_rhcsa_server
+- name: Ensure required packages are installed
+  ansible.builtin.dnf:
+    name: "{{ packages }}"
+    state: present
+
+- name: Open up firewalld so server can serve nfs
+  ansible.posix.firewalld:
+    service: nfs
+    permanent: true
+    state: enabled
+    immediate: true
+  notify: restart firewalld
+
+- name: Set up nfs share dirs
+  ansible.builtin.file:
+    path: "{{ nfs_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  loop: "{{ nfs_shares }}"
+  loop_control:
+    loop_var: nfs_dir
+  notify:
+    - restart nfs
+
+- name: Create /exports directory
+  ansible.builtin.file:
+    path: /exports
+    state: directory
+    owner: root
+    group: root
+
+- name: Set up nfs users and directories
+  ansible.builtin.user:
+    user: "{{ item['name'] }}"
+    home: "/exports/{{ item['name'] }}"
+    uid: "{{ item['uid'] }}"
+    generate_ssh_key: true
+    ssh_key_file: .ssh/id_rsa
+    ssh_key_bits: 4096
+  loop: "{{ nfs_users }}"
+   
+- name: Create public_html directory
+  ansible.builtin.file:
+    path: "/exports/{{ item['name'] }}/public_html"
+    state: directory
+    owner: "{{ item['name'] }}"
+    group: "{{ item['name'] }}"
+    mode: 0755
+  loop: "{{ nfs_users }}"
+
+- name: Create an public_html/index.html file
+  ansible.builtin.copy:
+    content: |
+       "You have successfully mounted an indirect mount for {{ item['name'] }}"
+    dest: "/exports/{{ item['name'] }}/public_html/index.html"
+    owner: "{{ item['name'] }}"
+    group: "{{ item['name'] }}"
+    mode: 0644
+  loop: "{{ nfs_users }}"
+
+- name: Create an public_html/index.html file
+  ansible.builtin.copy:
+    content: |
+       "You have successfully created an nfs share for html content"
+    dest: "/webfiles/index.html"
+    owner: root
+    group: root
+    mode: 0644
+  loop: "{{ nfs_users }}"
+
+- name: Make sure the nfs_shares directories are empty
+  ansible.builtin.find:
+    paths: "{{ item }}"
+  loop: "{{ nfs_shares }}"
+  register: find_output
+  when: "'share' in item"
+
+- name: Create fake data files for the data and data2 dirs
+  ansible.builtin.shell: |
+    fallocate -l 20m {{ lookup('community.general.random_words', min_length=8, max_length=15, numwords=1) }} 
+    fallocate -l 20m {{ lookup('community.general.random_words', min_length=8, max_length=15, numwords=1) }} 
+    fallocate -l 20m {{ lookup('community.general.random_words', min_length=8, max_length=15, numwords=1) }} 
+  args:
+    chdir: "{{ item['item'] }}"
+  loop: "{{ find_output['results'] }}"
+  when: 
+    - "'share' in item['item']"
+    - item['matched']|int == 0
+
+- name: Set up server to be an nfs source
+  ansible.builtin.template:
+    src: exportfs.j2
+    dest: /etc/exports
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - restart nfs
+
+- name: Configure server to be an ntp source
+  ansible.builtin.lineinfile:
+    path: /etc/chrony.conf
+    regexp: '^allow(.*)$'
+    line: "allow {{ ansible_default_ipv4['network'] }}/{{ ansible_default_ipv4['prefix'] }}"
+  notify:
+    - restart chrony
+
+...

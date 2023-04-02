@@ -1,0 +1,19 @@
+---
+# handlers file for deploy_rhcsa_server
+- name: restart nfs
+  ansible.builtin.systemd:
+    name: nfs-server.service
+    state: restarted
+    enabled: true
+
+- name: restart firewalld
+  ansible.builtin.systemd:
+    name: firewalld.service
+    state: restarted
+    enabled: true
+
+- name: restart chrony
+  ansible.builtin.systemd:
+    name: chronyd.service
+    state: restarted
+    enabled: true

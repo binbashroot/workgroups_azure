@@ -1,0 +1,173 @@
+resource "azurerm_virtual_network" "workgroup" {
+  name                = "workgroup-network"
+  address_space       = ["10.0.0.0/16"]
+  location            = var.resource_group["location"]
+  resource_group_name = var.resource_group["name"]
+}
+
+resource "azurerm_subnet" "workgroup0" {
+  name                 = "internal-0"
+  resource_group_name  = var.resource_group["name"]
+  virtual_network_name = azurerm_virtual_network.workgroup.name
+  address_prefixes     = ["10.0.1.0/24"]
+}
+
+resource "azurerm_subnet" "workgroup1" {
+  name                 = "internal-1"
+  resource_group_name  = var.resource_group["name"]
+  virtual_network_name = azurerm_virtual_network.workgroup.name
+  address_prefixes     = ["10.0.2.0/24"]
+}
+
+resource "azurerm_network_interface" "workgroup0" {
+  count               = var.vm_info["count"]
+  name                = "nic-0-${count.index}"
+  location            = var.resource_group["location"]
+  resource_group_name = var.resource_group["name"]
+
+  ip_configuration {
+    name                          = "internal-0"
+    subnet_id                     = azurerm_subnet.workgroup0.id
+    private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = element(azurerm_public_ip.workgroup.*.id, count.index)
+
+  }
+}
+
+resource "azurerm_network_interface" "workgroup1" {
+  count               = var.vm_info["count"]
+  name                = "nic-1-${count.index}"
+  location            = var.resource_group["location"]
+  resource_group_name = var.resource_group["name"]
+
+  ip_configuration {
+    name                          = "internal-1"
+    subnet_id                     = azurerm_subnet.workgroup1.id
+    private_ip_address_allocation = "Dynamic"
+
+  }
+}
+
+resource "azurerm_linux_virtual_machine" "workgroup" {
+  name                = "${var.vm_info["workgroup"]}-vm-${count.index}"
+  count               = var.vm_info["count"]
+  resource_group_name = var.resource_group["name"]
+  location            = var.resource_group["location"]
+  size                = "Standard_B4ms"
+  admin_username      = var.ssh_connection["ssh_user"]
+  computer_name       = "${var.vm_info["workgroup"]}-vm-${count.index}"
+  disable_password_authentication = true
+  network_interface_ids = [
+    element(azurerm_network_interface.workgroup0.*.id, count.index),
+    element(azurerm_network_interface.workgroup1.*.id, count.index)
+  ]
+  tags                = { 
+{% if workgroup|lower == 'rhcsa' %}    
+    server_type = count.index == 0 ? "{{ workgroup }}_server" : (count.index == 1 ? "{{ workgroup }}_client" : (count.index == 2 ? "{{ workgroup }}_reposerver" : (count.index > 2 ? "{{ workgroup }}_generic" : "")))
+{% elif workgroup|lower == 'rhce' %}    
+    server_type = count.index == 0 ? "{{ workgroup }}_controller" : (count.index == 1 ? "{{ workgroup }}_client" : (count.index == 2 ? "{{ workgroup }}_reposerver" : (count.index > 2 ? "{{ workgroup }}_generic" : "")))
+{% endif %}
+    }
+
+  admin_ssh_key {
+    username   = var.ssh_connection["ssh_user"]
+    public_key = file(var.ssh_connection["ssh_key"])
+  }
+
+  os_disk {
+    caching              = "ReadWrite"
+    storage_account_type = "Premium_LRS"
+  }
+
+  boot_diagnostics {
+  {% if boot_diagnostics_endpoint is defined and boot_diagnostics_endpoint|length > 0 %}
+    storage_account_uri = "{{ boot_diagnostics_endpoint }}"
+  {% endif %}
+  }
+
+  source_image_reference {
+    publisher = "RedHat"
+    offer     = "RHEL"
+    sku       = "9_1"
+    version   = "latest"
+  }
+
+}
+
+resource "azurerm_public_ip" "workgroup" {
+  count               = var.vm_info["count"]
+  name                = "internal-0-public-nic-${count.index}"
+  resource_group_name = var.resource_group["name"]
+  location            = var.resource_group["location"]
+  allocation_method   = "Dynamic"
+
+  tags = {
+    environment = "Production"
+  }
+}
+
+resource "azurerm_network_security_group" "workgroup" {
+  name                = "workgroup-security-group0"
+  location            = var.resource_group["location"]
+  resource_group_name = var.resource_group["name"]
+
+  security_rule {
+    name                       = "ssh"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "22"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+  security_rule {
+    name                       = "HTTP"
+    priority                   = 1003
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "80"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+  security_rule {
+    name                       = "HTTPS"
+    priority                   = 1002
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "443"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+  tags = {
+    environment = "Production"
+  }
+}
+resource "azurerm_network_interface_security_group_association" "workgroup" {
+    count               = var.vm_info["count"]
+    network_interface_id      = element(azurerm_network_interface.workgroup0.*.id, count.index)
+    network_security_group_id = azurerm_network_security_group.workgroup.id
+}
+
+resource "azurerm_managed_disk" "workgroup" {
+  count                = var.vm_info["count"]
+  name                 = "workgroup-vm-managed-disk-1-${count.index}"
+  location             = var.resource_group["location"]
+  resource_group_name  = var.resource_group["name"]
+  storage_account_type = "Standard_LRS"
+  create_option        = "Empty"
+  disk_size_gb         = 10
+}
+
+resource "azurerm_virtual_machine_data_disk_attachment" "workgroup" {
+  count               = var.vm_info["count"]
+  managed_disk_id    = azurerm_managed_disk.workgroup[count.index].id
+  virtual_machine_id = azurerm_linux_virtual_machine.workgroup[count.index].id
+  lun                ="10"
+  caching            = "ReadWrite"
+}

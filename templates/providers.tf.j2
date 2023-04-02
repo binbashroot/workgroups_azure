@@ -1,0 +1,30 @@
+terraform {
+  required_providers {
+    azurerm = {
+        source  = "hashicorp/azurerm"
+        version = "=3.0.0"
+      }
+    ansible = {
+        version = "~> 1.0.0"
+        source  = "ansible/ansible"
+      }
+  }
+   backend "azurerm" {
+        resource_group_name  = "{{ azure_resource_group }}"
+        storage_account_name = "{{ storage_account_name }}"
+        container_name       = "tfstate"
+        key                  = "terraform.tfstate"
+        access_key           = "{{ backend_access_key }}"
+    }
+}
+
+# Configure the Microsoft Azure Provider
+provider "azurerm" {
+  features {}
+}
+
+# Configure the Ansible Provider
+provider "ansible" {
+  path        = "inventory"
+  log_caller  = false
+}

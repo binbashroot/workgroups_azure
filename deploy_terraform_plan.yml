@@ -1,0 +1,153 @@
+---
+- name: Deploy an Azure Workgroup Environment 
+  hosts: localhost
+  gather_facts: false
+  environment:
+    AZURE_TENANT: "{{ lookup('env','AZURE_TENANT') }}"
+    AZURE_CLIENT_ID: "{{ lookup('env','AZURE_CLIENT_ID') }}"
+    AZURE_SECRET: "{{ lookup('env','AZURE_SECRET') }}"
+    AZURE_SUBSCRIPTION_ID: "{{ lookup('env','AZURE_SUBSCRIPTION_ID') }}"
+    ANSIBLE_AZURE_AUTH_SOURCE: env
+  tasks:
+    - name: Assert that a workgroup has been defined
+      ansible.builtin.assert:
+        that:
+          - workgroup is defined
+          - workgroup == 'rhcsa' or workgroup == 'rhce'
+
+    - name: Load variable files
+      ansible.builtin.include_vars:
+        dir: vars
+        extensions:
+          - 'yml'
+
+    - name: Create tfstate block
+      block:
+        - name: "[ BLOCK TASK ] - Set the storage_account_name variable"
+          ansible.builtin.set_fact:
+            storage_account_name: "{{ workgroup + 'tfstate' }}"
+
+        - name: "[ BLOCK TASK ] - Create storage account for terraform state file"
+          azure.azcollection.azure_rm_storageaccount:
+            resource_group: "{{ azure_resource_group }}"
+            type: "{{ azure_storage_account_type | default('Standard_LRS') }}"
+            name: "{{ storage_account_name }}"
+
+        - name: '[ BLOCK TASK ] - Create  storage container for terraform state file'
+          azure.azcollection.azure_rm_storageblob:
+            resource_group: "{{ azure_resource_group }}"
+            storage_account_name: "{{ storage_account_name }}"
+            container: tfstate
+
+        - name: '[ BLOCK TASK ] - Get the storage facts for our storage account'
+          azure.azcollection.azure_rm_storageaccount_info:
+            resource_group: "{{ azure_resource_group }}"
+            name: "{{ storage_account_name }}"
+            show_connection_string: true
+          register: __storage_facts
+
+        - name: "[ BLOCK TASK ] - Set the access_key variable for terraform"
+          ansible.builtin.set_fact:
+            backend_access_key: >-
+              {{ __storage_facts['storageaccounts']|
+                 selectattr('primary_endpoints','defined')|
+                 map(attribute='primary_endpoints')|
+                 selectattr('key','defined')|
+                 map(attribute='key')|
+                 first }}
+            boot_diagnostics_endpoint: >-
+              {{ __storage_facts['storageaccounts']|
+                 selectattr('primary_endpoints','defined')|
+                 map(attribute='primary_endpoints')|
+                 selectattr('blob','defined')|
+                 map(attribute='blob')|
+                 selectattr('endpoint','defined')|
+                 map(attribute='endpoint')|
+                 first }}
+
+    - name: Configure provider.tf file
+      ansible.builtin.template:
+        src: providers.tf.j2
+        dest: "{{ playbook_dir }}/{{ tf_project_dir }}/providers.tf"
+        mode: 0644
+
+    - name: Configure variable.tf file
+      ansible.builtin.template:
+        src: variables.tf.j2
+        dest: "{{ playbook_dir }}/{{ tf_project_dir }}/vars.tf"
+        mode: 0644
+
+    - name: Configure main.tf file
+      ansible.builtin.template:
+        src: main.tf.j2
+        dest: "{{ playbook_dir }}/{{ tf_project_dir }}/main.tf"
+        mode: 0644
+
+    - name: Configure outputs.tf file
+      ansible.builtin.copy:
+        src: outputs.tf
+        dest: "{{ playbook_dir }}/{{ tf_project_dir }}/outputs.tf"
+        mode: 0644
+
+    - name: Create inventory.azure_rm.yml file
+      ansible.builtin.template:
+        src: inventory.j2
+        dest: "{{ playbook_dir }}/inventory/inventory.azure_rm.yml"
+        mode: 0644
+
+    - name: Deploy terraform plan
+      cloud.terraform.terraform:
+        project_path: "{{ playbook_dir }}/{{ tf_project_dir }}"
+        state: present
+        force_init: true
+
+    - name: Get output information
+      cloud.terraform.terraform_output:
+        project_path: "{{ tf_project_dir }}"
+      register: states
+
+    - name: Set fact
+      ansible.builtin.set_fact:
+        workgroup_public_ips: "{{ states['outputs']['server_ips']['value'] }}"
+
+    - name: Debug stuff
+      ansible.builtin.debug:
+        var: workgroup_public_ips
+
+    - name: Wait 300 seconds for port 22 to become open 
+      wait_for:
+        port: 22
+        host: "{{ item }}"
+      loop: "{{ workgroup_public_ips }}"
+
+    - name: Refresh the dynamic inventory
+      ansible.builtin.meta: refresh_inventory
+      
+- hosts: all
+  gather_facts: true
+  become: true
+  tasks:
+
+    - name: Add hosts to /etc/hosts file
+      ansible.builtin.blockinfile:
+        block: "{{ lookup('template', 'etc_hosts_entries.j2') }}"
+        path: /etc/hosts
+        backup: true
+        
+    - name: Include the deploy_rhcsa_server role
+      ansible.builtin.include_role:
+        name: deploy_rhcsa_server
+      when: inventory_hostname in groups['rhcsa_server']
+
+    - name: Include the deploy_rhcsa_client role
+      ansible.builtin.include_role:
+        name: deploy_rhcsa_client
+      when: inventory_hostname in groups['rhcsa_client']
+
+    # - name: Include the deploy_rhcsa_server role
+    #   ansible.builtin.include_role:
+    #     name: deploy_rhcsa_repo
+    #   when: inventory_hostname in groups['rhcsa_repo']
+
+
+...

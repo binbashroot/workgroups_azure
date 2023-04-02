@@ -1,0 +1,23 @@
+variable "vm_info" {
+  type = map  
+  default = {
+    "count" = "{{ vm_count|default('3') }}"
+    "workgroup" = "{{ workgroup|default('rhcsa') }}"
+  }
+}
+
+variable "resource_group" {
+  type = map
+  default = {
+    "name" =  "{{ lookup('env','AZURE_RESOURCE_GROUP') }}"
+    "location"  = "{{ azure_location }}"
+  }
+}
+
+variable "ssh_connection" {
+  type = map 
+  default = {
+    "ssh_key"   = "{{ rhpds_ssh_public_key_path }}"
+    "ssh_user"  = "student"
+  }
+}

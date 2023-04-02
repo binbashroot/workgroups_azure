@@ -1,0 +1,12 @@
+- name: Deploy Configurations
+  hosts: rhcsa_server
+  gather_facts: true
+  become: true
+  tasks:
+
+    - name: Include the deploy_rhcsa_server role
+      ansible.builtin.include_role:
+        name: deploy_rhcsa_server
+      when: inventory_hostname in groups['rhcsa_server']
+
+

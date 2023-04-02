@@ -1,0 +1,14 @@
+---
+# defaults file for deploy_rhcsa_client
+    
+nfs_users:
+  - name: larry
+    uid: '1002'
+  - name: moe
+    uid: '1003'
+  - name: curly
+    uid: '1004'
+
+number: "{{ lookup('community.general.random_string', min_lower=0, min_upper=0, min_special=0, min_numeric=2, length=2 ) }}"
+
+word: "{{ lookup('community.general.random_words', min_length=6, max_length=8, numwords=1) }}"

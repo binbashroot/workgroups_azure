@@ -1,0 +1,3 @@
+{% for dirs in nfs_shares %}
+{{ dirs }} {{ ansible_default_ipv4['network'] }}/{{ ansible_default_ipv4['prefix'] }}(rw)
+{% endfor %}

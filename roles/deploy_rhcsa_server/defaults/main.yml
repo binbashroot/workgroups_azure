@@ -1,0 +1,22 @@
+---
+# defaults file for deploy_rhcsa_server
+packages:
+  - nfs-utils
+  - glibc-langpack-en
+
+nfs_shares:
+  - /share/data    #<- nfs direct automount
+  - /share/data2   #<- nfs indirect automount 
+  - /webfiles      #<- nfs persistent mount /etc/fstab
+  - /exports       #<- nfs indirect mount for user accounts
+
+nfs_users:
+  - name: larry
+    uid: '1002'
+  - name: moe
+    uid: '1003'
+  - name: curly
+    uid: '1004'
+
+...
+
