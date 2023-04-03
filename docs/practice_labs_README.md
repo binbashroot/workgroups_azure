@@ -1,20 +1,21 @@
 # Practice Tasks for RHCSA
 
 NOTES:  
-Any files in a user's home directory must be owner/group of the user
+UNLESS OTHERSWISE SPECIFIED, ALL TASKS MUST OCCUR ON rhcsa-vm-1
+Any files in a user's home directory must be owned by the correct owner/group of the user
 
 # Perform the following tasks
 ### Task 1
 
 **Change IP**
->Change the eth1 interface of VM2 
+>Change the eth1 interface of rhcsa-vm-1 
 > IP: **10.0.2.121**
 > NETMASK: **255.255.255.0**
 > GATEWAY: **10.0.2.1**
 >This change must persist through reboots
 >
 **Change Hostname**
->Change the hostname of VM2 to: **serverb.example.com**
+>Change the hostname rhcsa-vm-1 to: **serverb.example.com**
 >This change must persist through reboots
 
 **SELinux**
@@ -25,19 +26,20 @@ Any files in a user's home directory must be owner/group of the user
 **Add the following repos to the system**  
 **NOTE: REPLACE qnapbu.example.com with your local yum repo that is being served via httpd**
 > BaseOS 
->> http://qnapbu.example.com/repo/BaseOS  
+>> http://reposerver.example.com/repo/BaseOS  
 
 > AppStream  
->> http://qnapbu.example.com/repo/AppStream  
+>> http://reposerver.example.com/repo/AppStream  
 
 **Install a web server**
-> Install the httpd package on servera.example.com  
+> Install the httpd package on rhcsa-vm-1 
 > The web services must survive a reboot  
-> Validate via the following webpage http://servera.example.com/exam/
+> Validate by running a curl command from rhcsa-vm-0  
+> Go to the public IP of rhcsa-vm-1 and validate.  I.e. http://$IP_OF_rhcsa-vm-1/exam/  
 
 ### Task 3
 **Filesystem** 
->Create and mount a filesystem using your primary disk  
+>Create and mount a filesystem using disk 3 (/dev/sdc)
 >Filesystem must be 850MiB in size  
 >Filesystem must use an ext3 filesytem  
 >Filesystem must be mounted on /mnt/task3  
@@ -105,7 +107,7 @@ Any files in a user's home directory must be owner/group of the user
 
 ### Task 10
 **Filesystem** 
->Create and mount a filesystem using your primary disk  
+>Create and mount a filesystem using your third disk (/dev/sdc)
 >Filesystem must be 500MiB in size  
 >Filesystem must use an xfs filesytem  
 >Filesystem must be mounted on /mnt/task10 
@@ -164,67 +166,85 @@ Add a two new partitions to your secondary disk
 >The task must be completed in a single command  
 >Put the command you used in a script called /opt/scripts/task16.sh  
 
-### Task 16
+### Task 17
 **Find Files**
 >Find all files owned by larry and copy them to a folder called /tmp/task17_files
 
-### Task 17
-**Chrony**
->Configure servera.example.com to be a ntp client from serverb.example.com  
->Validate time has been properly synced and write results to /tmp/time_validation.out
-
 ### Task 18
+**Chrony**
+>Configure rhcsa-vm-1 to be a ntp client from rhcsa-vm-0  
+>Validate time has been properly synced and write results to /tmp/time_validation.out   
+
+### Task 19
 **Logical volumes**
-> On serverb.example.com
->> Using /dev/sdb do the following:
+> On rhcsa-vm-1
+>> Using /dev/sdc do the following:
 >>> Create a 1G partition  
 >>> Create a 500M logical volume 500M that belongs to the rhcsavg volume group  
 >>>
 
 **Swap**
->On serverb.example.com
+>On rhcsa-vm-1
+>> Using /dev/sdc do the following:
 >>Create a 2G swap partition  
 >>Swap partition must persist across reboots  
 >>
 
-## Task 18
+## Task 20 
 **Configure nfs to mount user home directories automatically**
 > The following three users larry, moe, and curly must be able to automatically mount their shared directories
-> from serverb.example.com whenever they log into servera.example.com
+> from rhcsa-vm-0 whenever they log into rhcsa-vm-1
 
-## Task 19
+## Task 21 
 **Configure httpd to use nfs**
-> SOURCE: serverb.example.com:/webfiles
-> DESTINATION HOST: servera.example.com
-> The mount point on the destination host should /var/www/html/rhcsa
+> SOURCE: rhcsa-vm-0:/webfiles
+> DESTINATION HOST: rhcsa-vm-1.example.com
+> The mount point on the destination host should /var/www/html/webfiles
 > The mount point on the destination host should persist across reboots
-> You must be able to see http://servera.example.com/rhcsa/index.html  
-
-## Task 20
-**Create mount as an indirect autofs mount**
-> Configure servera.example.com to mount files from serverb.example.com:/share/data to /shares/data whenever someone enters the /shares/data directory
-
-## Task 21
-**Create mount as an direct autofs mount**
-> Mount the following nfs share on servera.example.com
-> SOURCE:  serverb.example.com:/share/data2
-> Configure servera.example.com to mount files from serverb.example.com:/share/data2 to /data2
-> whenever /data2 is accessed
+> You must be able to see http://rhcsa-vm-1.example.com/webfiles/index.html  
 
 ## Task 22
+**Create mount as an indirect autofs mount**
+> Configure rhcsa-vm-1 to mount files from rhcsa-vm-0:/share/data to /shares/data whenever someone enters the /shares/data directory  
+
+## Task 23
+**Create mount as an direct autofs mount**  
+> Mount the following nfs share on rhcsa-vm-1 
+> SOURCE:  rhcsa-vm-0:/share/data2  
+> Configure rhcsa-vm-1 to mount files from rhcsa-vm-0:/share/data2 to /data2  
+> whenever /data2 is accessed  
+
+## Task 24
 **Configure a directory to be used by multiple teams**
 > Create the /opt/marvel directory
 > THe directory should be owned by student
 > The group should be owned by marvel
 > Any created, copied, or moved to /opt/marvel should become automatically be owned by the marvel group.
 
-## Task 23
+## Task 25
 **Configure httpd to listen on port 8888**
-> Modify apache webserver to listen on port 8888
+> Modify apache webserver on rhcsa-vm-1 to listen on port 8888
 > Restart the httpd service
-> You must be able to see http://servera.example.com:8888/exam/index.html  
+> validate by executing a curl call from rhcsa-vm-0 to http://rhcsa-vm-1:8888/exercise/index.html  
+> You must be able to see http://servera.example.com:8888/exercise/index.html  
 
-## Task 24
-**Install and Configure Time Sync Software**
-> Configure servera as a time sync client to 192.168.1.122
+## Task 26
+**Create a logical volume**
+>Volume Group: azuretestvg
+>Logical Volume: foolv
+>Size: 2G
+>Mountpoint: /foo
+>Filesystem: xfs
+>Disk: /dev/sdc
+>Must be persistent on reboot
+
+## Task 27
+**Create a logical volume**
+>Volume Group: azuretestvg
+>Logical Volume: barlv
+>Size: 2G
+>Mountpoint: /bar
+>Filesystem: ext3
+>Disk: /dev/sdc
+>Must be persistent on reboot
 

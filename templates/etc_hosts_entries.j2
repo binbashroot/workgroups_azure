@@ -6,3 +6,9 @@
 {{ hostvars[host]['ansible_facts']['eth0']['ipv4']['address'] }} reposerver.example.com
 {% endfor %}
 {% endif %}
+{% if groups['rhcsa_client'] is defined %}
+{% for host in groups['rhcsa_client'] %}
+{{ hostvars[host]['ansible_facts']['eth0']['ipv4']['address'] }} serverb.example.com
+{% endfor %}
+{% endif %}
+
