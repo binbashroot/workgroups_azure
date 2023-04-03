@@ -1,5 +1,5 @@
 ---
-- name: Deploy an Azure Workgroup Environment 
+- name: Deploy an Azure Workgroup Environment
   hosts: localhost
   gather_facts: false
   environment:
@@ -114,16 +114,17 @@
       ansible.builtin.debug:
         var: workgroup_public_ips
 
-    - name: Wait 300 seconds for port 22 to become open 
-      wait_for:
+    - name: Wait 300 seconds for port 22 to become open
+      ansible.builtin.wait_for:
         port: 22
         host: "{{ item }}"
       loop: "{{ workgroup_public_ips }}"
 
     - name: Refresh the dynamic inventory
       ansible.builtin.meta: refresh_inventory
-      
-- hosts: all
+
+- name: Run post provision roles
+  hosts: all
   gather_facts: true
   become: true
   tasks:
@@ -134,24 +135,43 @@
         path: /etc/hosts
         backup: true
 
+    - name: Patch block tasks
+      when: inventory_hostname in groups['lab_core']
+      block:
+
+        - name: '[ Patch Block Task ] - Update all packages before start opening firewalls'
+          ansible.builtin.dnf:
+            name: '*'
+            state: latest
+            update_only: true
+
+        - name: '[ Patch Block Task ] - Check if server needs to be rebooted'
+          ansible.builtin.command: needs-restarting -r
+          changed_when: false
+          register: __reboot_status
+
+        - name: '[ Patch Block Task ] - Reboot servers'
+          ansible.builtin.reboot:
+          when: __reboot_status['rc'] | int == 1
+
+    - name: Include the deploy_rhcsa_server role
+      ansible.builtin.include_role:
+        name: deploy_rhcsa_server
+      when: inventory_hostname in groups['rhcsa_server']
+
+    - name: Include the deploy_rhcsa_client role
+      ansible.builtin.include_role:
+        name: deploy_rhcsa_client
+      when: inventory_hostname in groups['rhcsa_client']
+
+    - name: Include the deploy_rhcsa_server role
+      ansible.builtin.include_role:
+        name: deploy_rhcsa_repo
+      when: inventory_hostname in groups['rhcsa_repo']
+
     - name: Print debug information
       ansible.builtin.debug:
         var: ansible_host
-
-#     - name: Include the deploy_rhcsa_server role
-#       ansible.builtin.include_role:
-#         name: deploy_rhcsa_server
-#       when: inventory_hostname in groups['rhcsa_server']
-
-#     - name: Include the deploy_rhcsa_client role
-#       ansible.builtin.include_role:
-#         name: deploy_rhcsa_client
-#       when: inventory_hostname in groups['rhcsa_client']
-
-#     # - name: Include the deploy_rhcsa_server role
-#     #   ansible.builtin.include_role:
-#     #     name: deploy_rhcsa_repo
-#     #   when: inventory_hostname in groups['rhcsa_repo']
 
 
 ...

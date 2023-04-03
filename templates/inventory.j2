@@ -11,6 +11,9 @@ conditional_groups:
   {{ workgroup }}_client: tags['server_type'] == "{{ workgroup }}_client"
   {{ workgroup }}_reposerver: tags['server_type'] == "{{ workgroup }}_reposerver"
   {{ workgroup }}_generic: tags['server_type'] == "{{ workgroup }}_generic"
+  lab_core: "'generic' not in tags['server_type']"
+  
+
 
 hostvar_expressions:
   ansible_user: "'student'"
