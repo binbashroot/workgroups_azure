@@ -22,6 +22,8 @@ Change the hostname of VM2 to: **serverb.example.com**. This change must persist
 
 Validate/Configure SELinux so it is enforced. Ensure SELinux enforcment is persistent across a reboot.
 
+<br></br>
+
 ### Task2
 
 #### 2.1 - Repos
@@ -41,6 +43,8 @@ Install a web server
 - [ ] The web services must survive a reboot
 - [ ] Validate via the following webpage **http://servera.example.com/exam/**
 
+<br></br>
+
 ### Task 3
 
 #### 3.1 - Filesystem 1
@@ -51,6 +55,8 @@ Create and mount a filesystem using your primary disk. The mount point must surv
 - [ ] Filesystem must use an **ext3** filesytem  
 - [ ] Filesystem must be mounted on **/mnt/task3**
 - [ ] Partition must be named **task3**  
+
+<br></br>
 
 ### Task 4
 
@@ -99,6 +105,8 @@ Create a script that can only be executable by root.
 
 Execute the script and ensure it works and verify that it has created the users/groups.
 
+<br></br>
+
 ### Task 5
 
 #### 5.1 - Text file 1
@@ -131,6 +139,8 @@ getent group marvel | cut -d: -f4 | tr , '\n'
 - [ ] File must be called **marvel_tb_3.txt**
 - [ ] File must contain the top and bottom three users of the full sorted list  
 
+<br></br>
+
 ### Task 6
 
 #### 6.1 - Filesystem 2
@@ -141,6 +151,8 @@ Create and mount a filesystem using your primary disk and the mount point must s
 - [ ] Filesystem must use an **xfs** filesytem  
 - [ ] Filesystem must be mounted on **/mnt/task10**
 - [ ] Partition must be named **task10**
+
+<br></br>
 
 ### Task 7
 
@@ -163,6 +175,8 @@ Create a directory and set permissions.
 - [ ] The permissions of the folder should only allow root and users in the badguys group access to read/write files.
 - [ ] The root user and users in the badguys group must be able to list files but all other users should not be able to list the contents of the /opt/villians directory
 
+<br></br>
+
 ### Task 8
 
 #### 8.1 - Partitions
@@ -175,6 +189,8 @@ Add a two new partitions to your secondary disk
 - [ ] The partition that is **500MiB** should have an **xfs** filesystem  
 - [ ] The ext3 filesystem should be mounted on **/mnt/task13_ext3**  
 - [ ] The xfs filesystem should be mounted on **/mnt/task13_xfs** 
+
+<br></br>
 
 ### Task 9
 
@@ -212,12 +228,16 @@ Find files on filesystem.
 
 - [ ] Find all files owned by **larry** and copy them to a folder called **/tmp/task17_files**
 
+<br></br>
+
 ### Task 10
 
 #### 10.1 - Configure Chrony
 
 - [ ] Configure **servera.example.com** to be a ntp client from **serverb.example.com**
 - [ ] Validate time has been properly synced and write results to **/tmp/time_validation.out**
+
+<br></br>
 
 ### Task 11
 
@@ -235,11 +255,15 @@ Configure swap partition on **serverb.example.com** that must persist across reb
 
 - [ ] Create a **2G** swap partition
 
+<br></br>
+
 ### Task 12
 
 #### 12.1 - Configure NFS to mount user home directories automatically
 
 - [ ] The following three users **larry**, **moe**, and **curly** must be able to automatically mount their shared directories from **serverb.example.com** whenever they log into **servera.example.com**
+
+<br></br>
 
 ### Task 13
 
@@ -253,6 +277,8 @@ DESTINATION HOST: servera.example.com
 ```
 
 - [ ] Verify URL - http://servera.example.com/rhcsa/index.html  
+
+<br></br>
 
 ### Task 14
 
@@ -270,6 +296,8 @@ SOURCE:  serverb.example.com:/share/data2
 
 - [ ] Configure **servera.example.com** to mount files from **serverb.example.com:/share/data2** to **/data2** whenever /data2 is accessed
 
+<br></br>
+
 ### Task 15
 
 #### 15.1 - Configure a directory to be used by multiple teams
@@ -279,6 +307,8 @@ SOURCE:  serverb.example.com:/share/data2
 - [ ] The group should be owned by **marvel**
 - [ ] Any created, copied, or moved to /opt/marvel should become automatically be owned by the marvel group.
 
+<br></br>
+
 ### Task 16
 
 #### 16.1 - Configure httpd to listen on port 8888
@@ -286,6 +316,8 @@ SOURCE:  serverb.example.com:/share/data2
 - [ ] Modify apache webserver to listen on port **8888**
 - [ ] Restart the httpd service
 - [ ] Verify URL - http://servera.example.com:8888/exam/index.html
+
+<br></br>
 
 ### Task 17
 
