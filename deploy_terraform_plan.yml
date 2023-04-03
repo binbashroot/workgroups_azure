@@ -133,21 +133,25 @@
         block: "{{ lookup('template', 'etc_hosts_entries.j2') }}"
         path: /etc/hosts
         backup: true
-        
-    - name: Include the deploy_rhcsa_server role
-      ansible.builtin.include_role:
-        name: deploy_rhcsa_server
-      when: inventory_hostname in groups['rhcsa_server']
 
-    - name: Include the deploy_rhcsa_client role
-      ansible.builtin.include_role:
-        name: deploy_rhcsa_client
-      when: inventory_hostname in groups['rhcsa_client']
+    - name: Print debug information
+      ansible.builtin.debug:
+        var: ansible_host
 
-    # - name: Include the deploy_rhcsa_server role
-    #   ansible.builtin.include_role:
-    #     name: deploy_rhcsa_repo
-    #   when: inventory_hostname in groups['rhcsa_repo']
+#     - name: Include the deploy_rhcsa_server role
+#       ansible.builtin.include_role:
+#         name: deploy_rhcsa_server
+#       when: inventory_hostname in groups['rhcsa_server']
+
+#     - name: Include the deploy_rhcsa_client role
+#       ansible.builtin.include_role:
+#         name: deploy_rhcsa_client
+#       when: inventory_hostname in groups['rhcsa_client']
+
+#     # - name: Include the deploy_rhcsa_server role
+#     #   ansible.builtin.include_role:
+#     #     name: deploy_rhcsa_repo
+#     #   when: inventory_hostname in groups['rhcsa_repo']
 
 
 ...
