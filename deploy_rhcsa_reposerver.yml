@@ -1,4 +1,4 @@
-- name: Deploy Configurations
+- name: Deploy Configurations for the Repo/Instructions Server
   hosts: rhcsa_reposerver
   gather_facts: true
   become: true
@@ -9,3 +9,4 @@
         name: deploy_rhcsa_reposerver
       when: inventory_hostname in groups['rhcsa_reposerver']
 
+...

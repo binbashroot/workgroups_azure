@@ -1,4 +1,4 @@
-- name: Deploy Configurations
+- name: Deploy Configurations for the NFS server
   hosts: rhcsa_server
   gather_facts: true
   become: true
