@@ -1,5 +1,5 @@
 ---
-# tasks file for deploy_rhcsa_client
+#tasks file for deploy_rhcsa_client
 - name: 'Create nfs users for {{ item }}'
   ansible.builtin.user:
     name: "{{ item['name'] }}"
@@ -17,7 +17,7 @@
     serole: object_r
     setype: httpd_config_t
 
-- name: Create custom userdir.conf for use with httpd 
+- name: Create custom userdir.conf for use with httpd
   ansible.builtin.copy:
     src: "{{ item }}"
     dest: "/etc/httpd/conf.d/{{ item }}"
@@ -27,7 +27,7 @@
     seuser: system_u
     serole: object_r
     setype: httpd_config_t
-  loop: 
+  loop:
      - userdir.conf
      - autoindex.conf
 
@@ -45,7 +45,7 @@
 
 - name: Set fact for random password
   ansible.builtin.set_fact:
-    rootpass: "{{ word + number }}"    
+    rootpass: "{{ word + number }}"
 
 - name: Write a password to file
   ansible.builtin.copy:
@@ -53,60 +53,57 @@
       {{ item['pass'] }}
     dest: "/root/{{ item['name'] }}_password"
     mode: 0644
-  loop: 
+  loop:
       -  { name: 'root', pass: "{{ rootpass }}" }
+
+# We have to use the shell module instead of the find module
+- name: See if 3 random files owned by larry exist
+  ansible.builtin.shell: |
+    find {{ larry_dirs|selectattr('path','defined')|map(attribute='path')|join(' ')|trim }} -type f -user larry
+  register: find_larry_results
 
 - name: Create 3 random named files that are owned by larry
   ansible.builtin.shell: |
-    fallocate -l {{ item['size'] }} {{ item['path'] }}
-    chown larry:larry {{ item['path'] }}
-    chmod 0644 {{ item['path'] }}
-  loop:
-    - { path: "/usr/local/etc/{{ word }}.txt", size: 10M }
-    - { path: "/usr/lib/locale/{{ word }}.foo", size: 5M }
-    - { path: "/etc/{{ word }}.txt", size: 3M }
+    fallocate -l {{ item['size'] }} {{ item['path'] }}/{{ word }}.{{ item['suffix'] }}
+    chown larry:larry {{ item['path'] }}/{{ word }}.{{ item['suffix'] }}
+    chmod 0644 {{ item['path'] }}/{{ word }}.{{ item['suffix'] }}
+  loop: "{{ larry_dirs }}"
+  when: 
+    - find_larry_results['stdout_lines']|length < 4
 
-- name: Create /opt/test1 and /opt/test2
+
+- name: Create /opt/test1, /opt/test2, and /opt/test3 directories
   ansible.builtin.file:
-    path: "/opt/{{ item }}"
+    path: "/opt/{{ item['name'] }}"
     state: directory
     owner: root
     group: root
     mode: 0600
-  loop:
-    - test1
-    - test2
-    - test3
+  loop: "{{ opt_test_dirs }}"
 
-- name: Create 5 random text files in /opt/test1
+- name: Check for existing files exist in the test directories
+  ansible.builtin.find:
+    paths: "/opt/{{ item['name'] }}"
+  loop: "{{ opt_test_dirs }}"
+  register: find_output
+
+# - debug:
+#     var: item[0]['matched']
+#   loop: "{{ find_output['results']|product(range(1,6))|list }}"
+
+- name: Create 5 random files in each of the opt test directories
   ansible.builtin.copy:
     content: |
       {{ lookup('community.general.random_string', length=28,special=false,numbers=false) }}
-    dest: "/opt/test1/{{ lookup('community.general.random_string', length=8, special=false, numbers=false)[0:-1] }}.txt"
+    dest: >-
+      /opt/{{ item[0]['item']['name'] }}/{{ lookup('community.general.random_string', 
+      length=8, special=false, numbers=false)[0:-1] }}.{{ item[0]['item']['suffix'] }}
     mode: 0644
     owner: nobody
     group: nobody
-  loop: "{{ range(1,6)|list }}"
-
-- name: Create 5 random text files in /opt/test2
-  ansible.builtin.copy:
-    content: |
-      {{ lookup('community.general.random_string', length=28,special=false,numbers=false) }}
-    dest: "/opt/test2/{{ lookup('community.general.random_string', length=8, special=false, numbers=false)[0:-1] }}.log"
-    mode: 0755
-    owner: student
-    group: student
-  loop: "{{ range(1,6)|list }}"
-
-- name: Create 10 random text files in /opt/test3
-  ansible.builtin.copy:
-    content: |
-      {{ lookup('community.general.random_string', length=108,special=false,numbers=false) }}
-    dest: "/opt/test3/{{ lookup('community.general.random_string', length=15, special=false, numbers=false)[0:-1] }}.out"
-    mode: 0755
-    owner: student
-    group: student 
-  loop: "{{ range(1,11)|list }}"
+  loop: "{{ find_output['results']|product(range(1,6))|list }}"
+  when:
+    - item[0]['matched']|int == 0
 
 - name: Install a basic index.html file
   ansible.builtin.file:
@@ -155,7 +152,7 @@
     path: /etc/yum.repos.d/redhat.repo
     state: absent
 
-- name: Set SELinux to permissiive 
+- name: Set SELinux to permissiive
   ansible.builtin.lineinfile:
     path: /etc/sysconfig/selinux
     regexp: '^SELINUX=(.*)'
@@ -170,7 +167,7 @@
 - name: Create an empty chrony file
   ansible.builtin.copy:
     content: |
-        # Add pool 
+        # Add pool
         # Defaults
         sourcedir /run/chrony-dhcp
         driftfile /var/lib/chrony/drift
