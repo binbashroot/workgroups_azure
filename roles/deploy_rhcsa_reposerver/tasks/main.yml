@@ -5,7 +5,7 @@
     name: httpd
     state: present
   notify: 
-    - restart_htttpd
+    - restart_httpd
 
 - name: permit traffic in default zone for http service
   ansible.posix.firewalld:

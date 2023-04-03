@@ -165,7 +165,7 @@
         name: deploy_rhcsa_client
       when: inventory_hostname in groups['rhcsa_client']
 
-    - name: Include the deploy_rhcsa_reposever role
+    - name: Include the deploy_rhcsa_reposerver role
       ansible.builtin.include_role:
         name: deploy_rhcsa_reposerver
       when: inventory_hostname in groups['rhcsa_reposerver']
