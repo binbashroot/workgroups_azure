@@ -248,3 +248,26 @@ Add a two new partitions to your secondary disk
 >Disk: /dev/sdc
 >Must be persistent on reboot
 
+## Task 28
+**Create a user**
+>**On rhcsa-vm-2**
+> Create a user named "larry" 
+> uid = 1001
+> gid = 1001
+> password = redhatazure23
+
+## Task 29
+**Reset passwords user**
+>**On rhcsa-vm-1**
+> Reset the passwords for "larry,moe, & curly"
+> password = redhatazure23
+
+# Task 30
+**Create and push ssh-keys**
+>**On rhcsa-vm-2**
+>As Larry user, generate an ssh key
+>Comment: "The larry user ssh key"
+>Bits: 4096
+>File: /home/larry/.ssh/id_rsa
+>Copy key from rhcsa-vm-1 to rhcsa-vm-1
+>You must be able to log in as the larry user without using a password

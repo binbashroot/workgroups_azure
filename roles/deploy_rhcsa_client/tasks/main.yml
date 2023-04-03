@@ -185,3 +185,10 @@
     owner: root
     group: root
     mode: 0644
+
+- name: Set a hostname specifying strategy
+  ansible.builtin.hostname:
+    name: serverb.example.com
+    use: systemd
+
+...
