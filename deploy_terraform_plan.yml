@@ -139,7 +139,7 @@
       when: inventory_hostname in groups['lab_core']
       block:
 
-        - name: '[ Patch Block Task ] - Update all packages before start opening firewalls'
+        - name: '[ Patch Block Task ] - Update all packages before we start opening firewalls'
           ansible.builtin.dnf:
             name: '*'
             state: latest
@@ -148,6 +148,7 @@
         - name: '[ Patch Block Task ] - Check if server needs to be rebooted'
           ansible.builtin.command: needs-restarting -r
           changed_when: false
+          failed_when: false
           register: __reboot_status
 
         - name: '[ Patch Block Task ] - Reboot servers'
@@ -164,10 +165,10 @@
         name: deploy_rhcsa_client
       when: inventory_hostname in groups['rhcsa_client']
 
-    - name: Include the deploy_rhcsa_server role
+    - name: Include the deploy_rhcsa_reposever role
       ansible.builtin.include_role:
-        name: deploy_rhcsa_repo
-      when: inventory_hostname in groups['rhcsa_repo']
+        name: deploy_rhcsa_reposerver
+      when: inventory_hostname in groups['rhcsa_reposerver']
 
     - name: Print debug information
       ansible.builtin.debug:
