@@ -43,7 +43,7 @@
     ssh_key_file: .ssh/id_rsa
     ssh_key_bits: 4096
   loop: "{{ nfs_users }}"
-   
+
 - name: Create public_html directory
   ansible.builtin.file:
     path: "/exports/{{ item['name'] }}/public_html"

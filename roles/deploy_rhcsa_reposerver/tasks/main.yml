@@ -1,10 +1,35 @@
 ---
 # tasks file for deploy_rhcsa_reposerver
+
+- name: Create /mnt/repos directory
+  ansible.builtin.file:
+    path: /mnt/repos
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+    setype: httpd_sys_content_t
+
+- name: Change contexts for repos
+  community.general.sefcontext:
+    target: '/mnt/repos(/.*)?'
+    setype: httpd_sys_content_t
+    state: present
+
+- name: Run restorecon on /mnt/repos
+  ansible.builtin.shell: |
+    restorecon -R /mnt/repos
+  changed_when: false
+
 - name: Install httpd to serve RHEL Repos
   ansible.builtin.dnf:
-    name: httpd
+    name:
+      - httpd
+      - podman
     state: present
-  notify: Restart firewalld
+  retries: 5
+  delay: 20
+  notify: restart_httpd
 
 - name: Permit traffic in default zone for madness port
   ansible.posix.firewalld:
@@ -25,19 +50,6 @@
   loop: "{{ reposerver_fw_svc }}"
   notify:
     - restart_firewalld
-
-- name: Change contexts for repos
-  community.general.sefcontext:
-    target: '/mnt/repos(/.*)?'
-    setype: httpd_sys_content_t
-    state: present
-  register: __repo_context
-
-- name: Run restorecon on /mnt/repos
-  ansible.builtin.shell: |
-    restorecon -R /mnt/repos
-  changed_when: false
-  when: __repo_context is changed
 
 - name: Create a symlink from /var/www/html/repos to /mnt/repos
   ansible.builtin.file:
@@ -64,19 +76,63 @@
     src: /dev/rootvg/madnesslv
     fstype: xfs
     state: mounted
+       
+- name: Fix permissions for /docs
+  ansible.builtin.file:
+    path: /docs
+    owner: root
+    mode: 0755
+    seuser: system_u
+
+- name: Change contexts for /docs
+  community.general.sefcontext:
+    target: '/docs(/.*)?'
+    setype: container_file_t
+    state: present
+
+- name: Copy madness.yml file into place
+  ansible.builtin.copy:
+    src: madness.yml
+    dest: /docs/.madness.yml
+    mode: 0644
+    owner: root
+    group: root
+
+- name: Run restorecon on /docs
+  ansible.builtin.shell: |
+    restorecon -R /docs
+  changed_when: false
 
 - name: Install Madness for markdown docs
   containers.podman.podman_image:
     name: docker.io/dannyben/madness
 
-- name: Running httpd image.
-  containers.podman.podman_container:
-    name: madness
-    image: docker.io/dannyben/madness
-    volume: 
-      - /docs
-    state: started
-    command: server
-    ports: 3000:3000
+# - name: Running the madness pod
+#   containers.podman.podman_container:
+#     name: madness
+#     image: dannyben/madness
+#     volume:
+#       - /docs
+#     state: started
+#     cmd_args: server
+#     tty: true
+#     ports: 
+#       - 3000:3000
+
+- name: Start podman container
+  ansible.builtin.shell: 
+    podman run -d --name madness -v /docs:/docs -p 3000:3000 dannyben/madness server
+  changed_when: false
+  failed_when: false
+
+- name: Create at job to sync the repos 
+  ansible.posix.at:
+    command: reposync -q -p /mnt/repos/{{ repo['name'] }} --download-metadata --norepopath --repoid={{ repo['repoid'] }}
+    count: 2
+    units: minutes
+  loop: "{{ reposync_repos }}"
+  loop_control:
+    loop_var: repo
+
 
 ...

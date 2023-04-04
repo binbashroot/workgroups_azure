@@ -49,13 +49,13 @@
     dest: "/root/{{ item['name'] }}_password"
     mode: 0644
   loop:
-    - name: 'root' 
+    - name: 'root'
       pass: "{{ rootpass }}"
 
 # We have to use the shell module instead of the find module
 - name: See if 3 random files owned by larry exist
   ansible.builtin.shell: |
-    find {{ larry_dirs | selectattr('path','defined') | map(attribute='path')|join(' ') | trim }} -type f -user larry
+    find {{ larry_dirs | selectattr('path', 'defined') | map(attribute='path') | join(' ') | trim }} -type f -user larry
   register: find_larry_results
   changed_when: false
 
@@ -65,7 +65,7 @@
     chown larry:larry {{ item['path'] }}/{{ word }}.{{ item['suffix'] }}
     chmod 0644 {{ item['path'] }}/{{ word }}.{{ item['suffix'] }}
   loop: "{{ larry_dirs }}"
-  when: 
+  when:
     - find_larry_results['stdout_lines']|length < 4
 
 - name: Create /opt/test1, /opt/test2, and /opt/test3 directories
@@ -88,7 +88,7 @@
     content: |
       {{ lookup('community.general.random_string', length=28, special=false, numbers=false) }}
     dest: >-
-      /opt/{{ item[0]['item']['name'] }}/{{ lookup('community.general.random_string', 
+      /opt/{{ item[0]['item']['name'] }}/{{ lookup('community.general.random_string',
       length=8, special=false, numbers=false)[0:-1] }}.{{ item[0]['item']['suffix'] }}
     mode: 0644
     owner: nobody
@@ -107,7 +107,7 @@
   loop:
     - { path: /var/www/html/exercise, state: directory, mode: '0755' }
     - { path: /var/www/html/webfiles, state: directory, mode: '0755' }
-    - { path: /var/www/html/exercise/index.html, state: touch ,mode: '0644' }
+    - { path: /var/www/html/exercise/index.html, state: touch, mode: '0644' }
 
 - name: Create a validation index.html file
   ansible.builtin.copy:
@@ -123,11 +123,11 @@
   ansible.builtin.uri:
     url: https://raw.githubusercontent.com/binbashroot/rhcsa_practice/main/README.md
     method: GET
-    return_content: yes
+    return_content: true
     user: binbashroot
     force_basic_auth: true
     headers:
-      Authorization: "Bearer {{ lookup('env','GITHUB_TOKEN') }}"
+      Authorization: "Bearer {{ lookup('env', 'GITHUB_TOKEN') }}"
   register: __tasks_download
 
 - name: Copy the tasks

@@ -137,44 +137,11 @@
         path: /etc/hosts
         backup: true
 
-    - name: Create a oneshot systemd service for reposerver to speed things up
-      when: inventory_hostname in groups['rhcsa_reposerver']
-      block:
-
-        - name: Create a oneshot service for
-          ansible.builtin.copy:
-            content: |
-              [Unit]
-              Description=A simple oneshot service
-              After=syslog.target network.target
-
-              [Service]
-              Type=oneshot
-              {% for repo in reposync_repos %}
-              ExecStart=/bin/bash -c "reposync -q -p /mnt/repos/{{ repo['name'] }} --download-metadata --norepopath --repoid={{ repo['repoid'] }}"
-              {% endfor %}
-              ExecStartPost=systemctl disable reposync.service
-
-              [Install]
-              WantedBy=multi-user.target
-
-            dest: /etc/systemd/system/reposync.service
-            mode: 0644
-            owner: root
-            group: root
-
-        - name: Reload systemd
-          ansible.builtin.systemd:
-            daemon_reload: true
-
-        - name: Enable oneshot
-          ansible.builtin.systemd:
-            name: reposync
-            enabled: true
-
     - name: Patch block tasks
       when: inventory_hostname in groups['lab_core']
       block:
+      tags:
+        - never
 
         - name: '[ Patch Block Task ] - Update all packages before we start opening firewalls'
           ansible.builtin.dnf:
