@@ -76,7 +76,7 @@
     src: /dev/rootvg/madnesslv
     fstype: xfs
     state: mounted
-       
+
 - name: Fix permissions for /docs
   ansible.builtin.file:
     path: /docs
@@ -107,25 +107,12 @@
   containers.podman.podman_image:
     name: docker.io/dannyben/madness
 
-# - name: Running the madness pod
-#   containers.podman.podman_container:
-#     name: madness
-#     image: dannyben/madness
-#     volume:
-#       - /docs
-#     state: started
-#     cmd_args: server
-#     tty: true
-#     ports: 
-#       - 3000:3000
-
 - name: Start podman container
-  ansible.builtin.shell: 
-    podman run -d --name madness -v /docs:/docs -p 3000:3000 dannyben/madness server
+  ansible.builtin.command: 'podman run -d --name madness -v /docs:/docs -p 3000:3000 dannyben/madness server'
   changed_when: false
   failed_when: false
 
-- name: Create at job to sync the repos 
+- name: Create at job to sync the repos
   ansible.posix.at:
     command: reposync -q -p /mnt/repos/{{ repo['name'] }} --download-metadata --norepopath --repoid={{ repo['repoid'] }}
     count: 2
@@ -133,6 +120,5 @@
   loop: "{{ reposync_repos }}"
   loop_control:
     loop_var: repo
-
 
 ...

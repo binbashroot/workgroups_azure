@@ -159,6 +159,7 @@
           ansible.builtin.reboot:
           when: __reboot_status['rc'] | int == 1
 
+
     - name: Include the deploy_rhcsa_server role
       ansible.builtin.include_role:
         name: deploy_rhcsa_server
