@@ -1,5 +1,6 @@
 ---
-#tasks file for deploy_rhcsa_client
+# tasks file for deploy_rhcsa_client
+
 - name: 'Create nfs users for {{ item }}'
   ansible.builtin.user:
     name: "{{ item['name'] }}"
@@ -28,19 +29,13 @@
     serole: object_r
     setype: httpd_config_t
   loop:
-     - userdir.conf
-     - autoindex.conf
+    - userdir.conf
+    - autoindex.conf
 
 - name: Remove all files for larry moe and curly users
   ansible.builtin.file:
     path: "/export/home/{{ (item[0])['name'] }}/{{ item[1] }}"
     state: absent
-  vars:
-    filelist:
-      - .profile
-      - .bash_profile
-      - .bashrc
-      - .bash_logout
   loop: "{{ nfs_users|product(filelist)|list  }}"
 
 - name: Set fact for random password
@@ -54,13 +49,15 @@
     dest: "/root/{{ item['name'] }}_password"
     mode: 0644
   loop:
-      -  { name: 'root', pass: "{{ rootpass }}" }
+    - name: 'root' 
+      pass: "{{ rootpass }}"
 
 # We have to use the shell module instead of the find module
 - name: See if 3 random files owned by larry exist
   ansible.builtin.shell: |
-    find {{ larry_dirs|selectattr('path','defined')|map(attribute='path')|join(' ')|trim }} -type f -user larry
+    find {{ larry_dirs | selectattr('path','defined') | map(attribute='path')|join(' ') | trim }} -type f -user larry
   register: find_larry_results
+  changed_when: false
 
 - name: Create 3 random named files that are owned by larry
   ansible.builtin.shell: |
@@ -70,7 +67,6 @@
   loop: "{{ larry_dirs }}"
   when: 
     - find_larry_results['stdout_lines']|length < 4
-
 
 - name: Create /opt/test1, /opt/test2, and /opt/test3 directories
   ansible.builtin.file:
@@ -87,14 +83,10 @@
   loop: "{{ opt_test_dirs }}"
   register: find_output
 
-# - debug:
-#     var: item[0]['matched']
-#   loop: "{{ find_output['results']|product(range(1,6))|list }}"
-
 - name: Create 5 random files in each of the opt test directories
   ansible.builtin.copy:
     content: |
-      {{ lookup('community.general.random_string', length=28,special=false,numbers=false) }}
+      {{ lookup('community.general.random_string', length=28, special=false, numbers=false) }}
     dest: >-
       /opt/{{ item[0]['item']['name'] }}/{{ lookup('community.general.random_string', 
       length=8, special=false, numbers=false)[0:-1] }}.{{ item[0]['item']['suffix'] }}
@@ -117,7 +109,7 @@
     - { path: /var/www/html/webfiles, state: directory, mode: '0755' }
     - { path: /var/www/html/exercise/index.html, state: touch ,mode: '0644' }
 
-- name: create a validation index.html file
+- name: Create a validation index.html file
   ansible.builtin.copy:
     content: |
       Congratulations, you have a working web page

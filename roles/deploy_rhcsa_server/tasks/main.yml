@@ -29,6 +29,7 @@
 - name: Create /exports directory
   ansible.builtin.file:
     path: /exports
+    mode: 0755
     state: directory
     owner: root
     group: root
@@ -81,13 +82,11 @@
 
 - name: Create fake data files for the data and data2 dirs
   ansible.builtin.shell: |
-    fallocate -l 20m {{ lookup('community.general.random_words', min_length=8, max_length=15, numwords=1) }} 
-    fallocate -l 20m {{ lookup('community.general.random_words', min_length=8, max_length=15, numwords=1) }} 
-    fallocate -l 20m {{ lookup('community.general.random_words', min_length=8, max_length=15, numwords=1) }} 
-  args:
-    chdir: "{{ item['item'] }}"
+    fallocate -l 20m {{ item['item'] }}/{{ lookup('community.general.random_words', min_length=8, max_length=15, numwords=1) }} 
+    fallocate -l 20m {{ item['item'] }}/{{ lookup('community.general.random_words', min_length=8, max_length=15, numwords=1) }} 
+    fallocate -l 20m {{ item['item'] }}/{{ lookup('community.general.random_words', min_length=8, max_length=15, numwords=1) }} 
   loop: "{{ find_output['results'] }}"
-  when: 
+  when:
     - "'share' in item['item']"
     - item['matched']|int == 0
 

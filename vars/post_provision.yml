@@ -1,0 +1,5 @@
+reposync_repos:
+  - name: BaseOS
+    repoid: rhel-9-for-x86_64-baseos-rhui-rpms
+  - name: AppStream
+    repoid: rhel-9-for-x86_64-appstream-rhui-rpms
