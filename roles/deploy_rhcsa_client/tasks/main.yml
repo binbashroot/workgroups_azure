@@ -36,7 +36,7 @@
   ansible.builtin.file:
     path: "/export/home/{{ (item[0])['name'] }}/{{ item[1] }}"
     state: absent
-  loop: "{{ nfs_users|product(filelist)|list  }}"
+  loop: "{{ nfs_users | product(filelist) | list  }}"
 
 - name: Set fact for random password
   ansible.builtin.set_fact:
