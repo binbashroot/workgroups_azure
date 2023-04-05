@@ -23,7 +23,7 @@
 
     - name: "Set the storage_account_name variable"
       ansible.builtin.set_fact:
-        storage_account_name: "{{ workgroup + 'tfstate' }}"
+        storage_account_name: "{{ workgroup + (azure_resource_group).split('-')[1] + 'tfstate' }}"
 
     - name: 'Get the storage facts for our storage account'
       azure.azcollection.azure_rm_storageaccount_info:

@@ -86,10 +86,10 @@
 - name: Create 5 random files in each of the opt test directories
   ansible.builtin.copy:
     content: |
-      {{ lookup('community.general.random_string', length=28, special=false, numbers=false) }}
+      {{ lookup('password', '/dev/null chars=ascii_lowercase,digits length=28') }}
     dest: >-
-      /opt/{{ item[0]['item']['name'] }}/{{ lookup('community.general.random_string',
-      length=8, special=false, numbers=false)[0:-1] }}.{{ item[0]['item']['suffix'] }}
+      /opt/{{ item[0]['item']['name'] }}/{{ lookup('password', '/dev/null 
+      chars=ascii_lowercase,digits length=10') }}.{{ item[0]['item']['suffix'] }}
     mode: 0644
     owner: nobody
     group: nobody
