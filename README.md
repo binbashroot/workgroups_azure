@@ -44,9 +44,13 @@ Requirements
 >
 >**SSH:**
 >- An "rsa" ssh key must be created
->- Ssh key namne must be 'id_rsa_rhpds' 
+>- Ssh key name must be 'id_rsa_rhpds' 
 >- Ssh key must reside in your user's home .ssh directory
->- Provisions hosts only allow pubkey authentication for connectivity
+>- - EXAMPLE: ~/.ssh/id_rsa_rhpds
+>- Provisioned hosts only allow pubkey authentication
+>- To Generate your key: ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa_rhpds -N ''
+
+
 
 Dependencies
 ------------

@@ -1,6 +1,7 @@
 ---
 - name: Deploy an Azure Workgroup Environment
   hosts: localhost
+  connection: local
   gather_facts: false
   environment:
     AZURE_TENANT: "{{ lookup('env','AZURE_TENANT') }}"
