@@ -138,20 +138,27 @@
         path: /etc/hosts
         backup: true
 
-    - name: Include the deploy_rhcsa_server role
-      ansible.builtin.include_role:
-        name: deploy_rhcsa_server
-      when: inventory_hostname in groups['rhcsa_server']
+    - name: Run RHCSA block tasks
+      block:
 
-    - name: Include the deploy_rhcsa_client role
-      ansible.builtin.include_role:
-        name: deploy_rhcsa_client
-      when: inventory_hostname in groups['rhcsa_client']
+        - name: Block Task ** Include the deploy_rhcsa_server role **
+          ansible.builtin.include_role:
+            name: deploy_rhcsa_server
+          when: inventory_hostname in groups['rhcsa_server']
 
-    - name: Include the deploy_rhcsa_reposerver role
-      ansible.builtin.include_role:
-        name: deploy_rhcsa_reposerver
-      when: inventory_hostname in groups['rhcsa_reposerver']
+        - name: Block Task ** Include the deploy_rhcsa_client role **
+          ansible.builtin.include_role:
+            name: deploy_rhcsa_client
+          when: inventory_hostname in groups['rhcsa_client']
+
+        - name: Block Task ** Include the deploy_rhcsa_reposerver role **
+          ansible.builtin.include_role:
+            name: deploy_rhcsa_reposerver
+          when: inventory_hostname in groups['rhcsa_reposerver']
+
+      when: workgroup == 'rhcsa'
+
+
 
     - name: Print the lab exercise url
       ansible.builtin.debug:
