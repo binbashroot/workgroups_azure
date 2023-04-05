@@ -41,6 +41,21 @@ Requirements
 >- ARM_CLIENT_SECRET=""
 >- ARM_SKIP_PROVIDER_REGISTRATION=true
 >
+>**Linux**
+>- sudo dnf install ansible -y
+>- sudo dnf install python3 python3-pip -y
+>- 
+>**Python**
+>- python3 -m pip install --upgrade pip
+>- pip install azure-mgmt-resource --user
+>- pip install azure-mgmt-resource --user
+>- pip install azure-identity --user
+>**Terraform**
+>- sudo dnf clean all
+>- sudo dnf makecache
+>- sudo dnf install -y dnf-plugins-core
+>- sudo dnf config-manager --add-repo https://rpm.releases.hashicorp.com/fedora/hashicorp.repo
+>- sudo dnf install terraform -y
 >**SSH:**
 >- An "rsa" ssh key must be created
 >- Ssh key name must be 'id_rsa_rhpds' 
@@ -48,8 +63,7 @@ Requirements
 >- - EXAMPLE: ~/.ssh/id_rsa_rhpds
 >- Provisioned hosts only allow pubkey authentication
 >- To Generate your key: ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa_rhpds -N ''
-
-
+>
 
 Dependencies
 ------------
@@ -74,9 +88,26 @@ Variables
 Example Syntax 
 ----------------
 ```
+Provisions a lab for RHCSA practice
 ansible-playbook -i inventory deploy_terraform_plan.yml -e workgroup=rhcsa
 
 ansible-playbook -i inventory deploy_terraform_plan.yml -e workgroup=rhcsa -e vm_count=5
+
+
+Provisions a lab for RHCE practice
+ansible-playbook -i inventory deploy_terraform_plan.yml -e workgroup=rhcse
+
+ansible-playbook -i inventory deploy_terraform_plan.yml -e workgroup=rhcse -e vm_count=5
+
+
+Provisions a lab with no practice configurations
+ansible-playbook -i inventory deploy_terraform_plan.yml -e workgroup=rhcsa -e tf_only=true
+
+Tears down an existing lab
+
+ansible-playbook -i inventory DESTROY_TERRAFORM_BUILD.yml -e workgroup=rhcsa -e tf_only=true
+
+
 ```
 
 Playbook 
