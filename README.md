@@ -80,8 +80,14 @@ Playbook
 ----------------
 See playbook [here](deploy_terraform_plan.yml)
 
+Troubleshooting
+----------------
 
-
+|Symptom|Fix|
+|:---|---|
+| Practice Lab Tasks Unreachable|Log in via ssh as  the "student" user to the reposerver and run: <br>podman restart madness|
+| deploy_terraform_plan.yml playbook fails| Rerun playbook |
+| Determine your host's public IPs| ansible-inventory -i inventory --list \|grep ansible_host |
 
 License
 -------
@@ -93,5 +99,5 @@ Author Information
 
 Randy Romero <randy.romero@redhat.com>   
 Michael DiDato <mdidato@redhat.com>
-
+Matt Willis <mawillis@redhat.com>
 

@@ -1,15 +1,21 @@
 ---
 # handlers file for deploy_rhcsa_reposerver
-- name: restart_httpd
+- name: Restart_httpd
   ansible.builtin.systemd:
     service: httpd
     state: restarted
     enabled: true
 
-- name: restart_firewalld
+- name: Restart_firewalld
   ansible.builtin.systemd:
     service: firewalld
     state: restarted
     enabled: true
 
+- name: restart mkdocs
+  ansible.builtin.systemd:
+    service: mkdocs
+    state: started
+    enabled: true
 ...
+

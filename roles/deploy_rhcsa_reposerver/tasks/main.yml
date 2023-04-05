@@ -1,5 +1,18 @@
 ---
 # tasks file for deploy_rhcsa_reposerver
+# 
+#
+# Enable SELinux mkdocs complains when running it.
+# Keeping all the  selinux related tasks in place until 
+# further notice
+# Maybe running it from "student's" home dir will help
+#
+# Add task to clone exercise repo (maybe need to dl via token or public repo)
+#
+- name: Put SELinux in permissive mode, logging actions that would be blocked.
+  ansible.posix.selinux:
+    policy: targeted
+    state: permissive
 
 - name: Create /mnt/repos directory
   ansible.builtin.file:
@@ -10,28 +23,29 @@
     group: root
     setype: httpd_sys_content_t
 
-- name: Change contexts for repos
-  community.general.sefcontext:
-    target: '/mnt/repos(/.*)?'
-    setype: httpd_sys_content_t
-    state: present
+# - name: Change contexts for repos
+#   community.general.sefcontext:
+#     target: '/mnt/repos(/.*)?'
+#     setype: httpd_sys_content_t
+#     state: present
 
-- name: Run restorecon on /mnt/repos
-  ansible.builtin.shell: |
-    restorecon -R /mnt/repos
-  changed_when: false
+# - name: Run restorecon on /mnt/repos
+#   ansible.builtin.shell: |
+#     restorecon -R /mnt/repos
+#   changed_when: false
 
 - name: Install httpd to serve RHEL Repos
   ansible.builtin.dnf:
     name:
       - httpd
-      - podman
+      - pip
     state: present
   retries: 5
   delay: 20
-  notify: restart_httpd
+  notify:
+    - Restart_httpd
 
-- name: Permit traffic in default zone for madness port
+- name: Permit traffic in default zone for mkdocs port
   ansible.posix.firewalld:
     port: "{{ item }}/tcp"
     permanent: true
@@ -39,7 +53,7 @@
     immediate: true
   loop: "{{ reposerver_fw_port }}"
   notify:
-    - restart_firewalld
+    - Restart_firewalld
 
 - name: Permit traffic in default zone for http service
   ansible.posix.firewalld:
@@ -49,7 +63,7 @@
     immediate: true
   loop: "{{ reposerver_fw_svc }}"
   notify:
-    - restart_firewalld
+    - Restart_firewalld
 
 - name: Create a symlink from /var/www/html/repos to /mnt/repos
   ansible.builtin.file:
@@ -62,55 +76,84 @@
 - name: Create a logical volume of 5G
   community.general.lvol:
     vg: rootvg
-    lv: madnesslv
+    lv: mkdocslv
     size: 5G
 
 - name: Create the filesystem for the madness logical volume
   community.general.filesystem:
     fstype: xfs
-    dev: /dev/rootvg/madnesslv
+    dev: /dev/rootvg/mkdocslv
 
 - name: Mount filesystem
   ansible.posix.mount:
     path: /docs
-    src: /dev/rootvg/madnesslv
+    src: /dev/rootvg/mkdocslv
     fstype: xfs
     state: mounted
 
 - name: Fix permissions for /docs
   ansible.builtin.file:
-    path: /docs
-    owner: root
+    path: /docs/exercise/docs
+    owner: student
+    group: student
     mode: 0755
-    seuser: system_u
 
-- name: Change contexts for /docs
-  community.general.sefcontext:
-    target: '/docs(/.*)?'
-    setype: container_file_t
-    state: present
+# - name: Change contexts for /docs
+#   community.general.sefcontext:
+#     target: '/docs(/.*)?'
+#     setype: gconf_home_t
+#     state: present
 
-- name: Copy madness.yml file into place
+- name: Copy mkdocs.yml file into place
   ansible.builtin.copy:
-    src: madness.yml
-    dest: /docs/.madness.yml
+    src: mkdocs.yml
+    dest: /docs/exercise/mkdocs.yml
     mode: 0644
+    owner: student
+    group: student
+
+- name: Install a temporary index.md file
+  ansible.builtin.copy:
+    content: |
+      {{ workroup }} Workgroup Exercises
+      If you see this page please call Jenny @ 867-5309 
+    dest: /docs/exercise/docs/index.md
+    owner: student
+    group: student
+    mode: 0644
+
+- name: Install mkdocs within a user home directory
+  ansible.builtin.pip:
+    name: mkdocs
+    extra_args: --user
+  become_user: student
+
+- name: Copy over mkdocs start up script
+  ansible.builtin.copy:
+    src: mkdocs.service
+    dest: /etc/systemd/system/mkdocs.service
     owner: root
     group: root
+    mode: 0644
+  notify: 
+    - restart mkdocs
 
-- name: Run restorecon on /docs
-  ansible.builtin.shell: |
-    restorecon -R /docs
-  changed_when: false
+- name: Reload systemctl
+  ansible.builtin.systemd:
+    daemon_reload: true
 
-- name: Install Madness for markdown docs
-  containers.podman.podman_image:
-    name: docker.io/dannyben/madness
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
 
-- name: Start podman container
-  ansible.builtin.command: 'podman run -d --name madness -v /docs:/docs -p 3000:3000 dannyben/madness server'
-  changed_when: false
-  failed_when: false
+- name: Verify connectivity to Madness container
+  ansible.builtin.uri:
+    url: 'http://{{ ansible_host }}:3000'
+    return_content: true
+  register: mkdocs_results
+  delegate_to: localhost
+  failed_when: "'MkDocs' not in mkresults_results['content']"
+  retries: 3
+  delay: 3
 
 - name: Create at job to sync the repos
   ansible.posix.at:
@@ -120,5 +163,11 @@
   loop: "{{ reposync_repos }}"
   loop_control:
     loop_var: repo
+
+- name: Create at job to do a dnf update in 20 minutes so reposync can complete first
+  ansible.posix.at:
+    command: dnf update -y
+    count: 20
+    units: minutes
 
 ...
