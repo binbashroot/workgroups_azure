@@ -17,3 +17,5 @@
     name: chronyd.service
     state: restarted
     enabled: true
+
+...

@@ -25,8 +25,6 @@ nfs_users:
   - name: curly
     uid: '1004'
 
-number: "{{ lookup('community.general.random_string', min_lower=0, min_upper=0, min_special=0, min_numeric=2, length=2) }}"
-
 opt_test_dirs:
   - name: test1
     suffix: txt
@@ -35,4 +33,4 @@ opt_test_dirs:
   - name: test3
     suffix: out
 
-word: "{{ lookup('community.general.random_words', min_length=6, max_length=8, numwords=1) }}"
+random_string: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_lowercase', 'digits'], length=10) }}"

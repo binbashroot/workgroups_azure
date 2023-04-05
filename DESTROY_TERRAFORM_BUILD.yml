@@ -46,3 +46,5 @@
       cloud.terraform.terraform:
         project_path: "{{ playbook_dir }}/{{ tf_project_dir }}"
         state: absent
+
+...

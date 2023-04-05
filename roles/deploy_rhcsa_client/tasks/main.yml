@@ -1,6 +1,5 @@
 ---
 # tasks file for deploy_rhcsa_client
-
 - name: 'Create nfs users for {{ item }}'
   ansible.builtin.user:
     name: "{{ item['name'] }}"
@@ -38,19 +37,16 @@
     state: absent
   loop: "{{ nfs_users | product(filelist) | list  }}"
 
-- name: Set fact for random password
-  ansible.builtin.set_fact:
-    rootpass: "{{ word + number }}"
-
 - name: Write a password to file
   ansible.builtin.copy:
     content: |
       {{ item['pass'] }}
     dest: "/root/{{ item['name'] }}_password"
     mode: 0644
+  changed_when: false
   loop:
-    - name: 'root'
-      pass: "{{ rootpass }}"
+    - name: root
+      pass: "{{ workgroup + random_string[0:3] }}"
 
 # We have to use the shell module instead of the find module
 - name: See if 3 random files owned by larry exist
@@ -61,9 +57,9 @@
 
 - name: Create 3 random named files that are owned by larry
   ansible.builtin.shell: |
-    fallocate -l {{ item['size'] }} {{ item['path'] }}/{{ word }}.{{ item['suffix'] }}
-    chown larry:larry {{ item['path'] }}/{{ word }}.{{ item['suffix'] }}
-    chmod 0644 {{ item['path'] }}/{{ word }}.{{ item['suffix'] }}
+    fallocate -l {{ item['size'] }} {{ item['path'] }}/{{ random_string }}.{{ item['suffix'] }}
+    chown larry:larry {{ item['path'] }}/{{ random_string }}.{{ item['suffix'] }}
+    chmod 0644 {{ item['path'] }}/{{ random_string }}.{{ item['suffix'] }}
   loop: "{{ larry_dirs }}"
   when:
     - find_larry_results['stdout_lines']|length < 4
@@ -88,14 +84,16 @@
     content: |
       {{ lookup('password', '/dev/null chars=ascii_lowercase,digits length=28') }}
     dest: >-
-      /opt/{{ item[0]['item']['name'] }}/{{ lookup('password', '/dev/null 
-      chars=ascii_lowercase,digits length=10') }}.{{ item[0]['item']['suffix'] }}
+      /opt/{{ item[0]['item']['name'] }}/{{ random_string }}
+      {{ workgroup }}{{ index_number }}.{{ item[0]['item']['suffix'] }}
     mode: 0644
     owner: nobody
     group: nobody
-  loop: "{{ find_output['results']|product(range(1,6))|list }}"
+  loop: "{{ find_output['results'] | product(range(1,6)) | list }}"
+  loop_control:
+    index_var: index_number
   when:
-    - item[0]['matched']|int == 0
+    - item[0]['matched'] | int == 0
 
 - name: Install a basic index.html file
   ansible.builtin.file:
@@ -141,8 +139,11 @@
 
 - name: Remove repo file
   ansible.builtin.file:
-    path: /etc/yum.repos.d/redhat.repo
+    path: "{{ item }}"
     state: absent
+  loop:
+    - /etc/yum.repos.d/redhat.repo
+    - /etc/yum.repos.d/rh-cloud-base-repo
 
 - name: Set SELinux to permissiive
   ansible.builtin.lineinfile:

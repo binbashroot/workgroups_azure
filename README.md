@@ -26,7 +26,6 @@ Instance Builds
 |3 (or higher)|rhce-vm-3|Generic Miscellaneous Use|
 
 
-***
 Requirements
 ------------
 

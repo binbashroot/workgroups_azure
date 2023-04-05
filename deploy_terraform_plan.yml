@@ -105,40 +105,37 @@
         project_path: "{{ tf_project_dir }}"
       register: states
 
-    - name: Set fact
-      ansible.builtin.set_fact:
-        workgroup_public_ips: "{{ states['outputs']['server_ips']['value'] }}"
-
-    - name: Debug stuff
+    - name: Debug
       ansible.builtin.debug:
-        var: workgroup_public_ips
+        msg: "{{ states['outputs']['server_ips']['value'] }}"
+      when:
+        - (only_tf is defined and only_tf|bool)
 
     - name: Wait 300 seconds for port 22 to become open
       ansible.builtin.wait_for:
         port: 22
         host: "{{ item }}"
-      loop: "{{ workgroup_public_ips }}"
+      loop: "{{ states['outputs']['server_ips']['value'] }}"
 
     - name: Refresh the dynamic inventory
       ansible.builtin.meta: refresh_inventory
 
-- name: Run post provision roles
+- name: Run Post Provision Tasks and Roles
   hosts: all
   gather_facts: true
   become: true
   tasks:
 
-    - name: Load variable files
-      ansible.builtin.include_vars:
-        file: post_provision.yml
-
-    - name: Add hosts to /etc/hosts file
+    - name: Add all hosts to /etc/hosts file of each server
       ansible.builtin.blockinfile:
         block: "{{ lookup('template', 'etc_hosts_entries.j2') }}"
         path: /etc/hosts
         backup: true
 
     - name: Run RHCSA block tasks
+      when:
+        - (only_tf is undefined or not only_tf|bool)
+        - workgroup == 'rhcsa'
       block:
 
         - name: Block Task ** Include the deploy_rhcsa_server role **
@@ -156,15 +153,24 @@
             name: deploy_rhcsa_reposerver
           when: inventory_hostname in groups['rhcsa_reposerver']
 
-      when: workgroup == 'rhcsa'
+        - name: Print the lab exercise url
+          ansible.builtin.debug:
+            msg:
+              - "#################################################"
+              - "#   Practice Exercises:"
+              - "#   http://{{ groups[workgroup + '_reposerver'] | map('extract',hostvars,'ansible_host')|first }}:3000"
+              - "#################################################"
+              - "#################################################"
+              - "#################################################"
+              - "#   SSH Access to Reposerver:"
+              - "#   ssh -i ~/.ssh/id_rsa_rhpds \"
+              - "#   student@{{ groups[workgroup + '_reposerver'] | map('extract',hostvars,'ansible_host')|first }}"
+              - "#################################################"
+          when: inventory_hostname in groups['rhcsa_reposerver']
+          run_once: true
 
-
-
-    - name: Print the lab exercise url
+    - name: Print Public IPs of Provisioned Hosts
       ansible.builtin.debug:
-        msg: >-
-           'Practice Lab Exercises Can Seen At:
-             http://{{ hostvars[groups[workgroup + '_reposerver'] | first]['ansible_host'] }}:3000'
+        var: groups['all'] | map('extract',hostvars,'ansible_host')
       run_once: true
-
 ...
