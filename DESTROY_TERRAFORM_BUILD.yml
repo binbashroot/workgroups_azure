@@ -10,6 +10,7 @@
     AZURE_SUBSCRIPTION_ID: "{{ lookup('env','AZURE_SUBSCRIPTION_ID') }}"
     ANSIBLE_AZURE_AUTH_SOURCE: env
   tasks:
+
     - name: Assert that a workgroup has been defined
       ansible.builtin.assert:
         that:

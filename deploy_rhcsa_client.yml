@@ -4,6 +4,12 @@
   become: true
   tasks:
 
+    - name: Assert that a workgroup has been defined
+      ansible.builtin.assert:
+        that:
+          - workgroup is defined
+          - workgroup == 'rhcsa' or workgroup == 'rhce'
+
     - name: Include the deploy_rhcsa_client role
       ansible.builtin.include_role:
         name: deploy_rhcsa_client
