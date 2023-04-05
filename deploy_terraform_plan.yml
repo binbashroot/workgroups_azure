@@ -171,6 +171,8 @@
 
     - name: Print Public IPs of Provisioned Hosts
       ansible.builtin.debug:
-        msg: "{{ groups['all'] | map('extract',hostvars,'ansible_host') }}"
+        msg:
+          - "Your Public Ips to your Azure Servers"
+          - "{{ groups['all'] | map('extract',hostvars,'ansible_host') }}"
       run_once: true
 ...
