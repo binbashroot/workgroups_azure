@@ -91,9 +91,10 @@
     fstype: xfs
     state: mounted
 
-- name: Fix permissions for /docs
+- name: Create the exercise directory
   ansible.builtin.file:
     path: /docs/exercise/docs
+    state: directory
     owner: student
     group: student
     mode: 0755
@@ -115,12 +116,15 @@
 - name: Install a temporary index.md file
   ansible.builtin.copy:
     content: |
-      {{ workroup }} Workgroup Exercises
-      If you see this page please call Jenny @ 867-5309 
+      {{ workgroup|default('rh')|upper }} Workgroup Exercises   
+      ====
+      If you see this page please call Jenny @ 867-5309  
     dest: /docs/exercise/docs/index.md
     owner: student
     group: student
     mode: 0644
+  notify:
+    - restart mkdocs
 
 - name: Install mkdocs within a user home directory
   ansible.builtin.pip:
@@ -151,7 +155,7 @@
     return_content: true
   register: mkdocs_results
   delegate_to: localhost
-  failed_when: "'MkDocs' not in mkresults_results['content']"
+  failed_when: "'MkDocs' not in mkdocs_results['content']"
   retries: 3
   delay: 3
 
