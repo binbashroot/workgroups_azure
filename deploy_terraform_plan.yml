@@ -171,6 +171,6 @@
 
     - name: Print Public IPs of Provisioned Hosts
       ansible.builtin.debug:
-        var: groups['all'] | map('extract',hostvars,'ansible_host')
+        msg: "{{ groups['all'] | map('extract',hostvars,'ansible_host') }}"
       run_once: true
 ...
