@@ -50,6 +50,8 @@ Requirements
 >- pip install azure-mgmt-resource --user
 >- pip install azure-mgmt-resource --user
 >- pip install azure-identity --user
+>- pip install msrest --user
+>- pip instsall msrestazure --user
 >**Terraform**
 >- sudo dnf clean all
 >- sudo dnf makecache
