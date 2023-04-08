@@ -5,7 +5,7 @@ variable "vm_info" {
     "count" = "{{ vm_count|default('3') }}"
     {% elif workgroup == 'rhce' %}
     "count" = "{{ vm_count|default('5') }}"
-    {% endif %}
+    {%- endif %}
     "workgroup" = "{{ workgroup }}"
   }
 }
