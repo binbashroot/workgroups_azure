@@ -1,4 +1,4 @@
-Deploy Terraform Plan Using Ansible
+Deploy Azure RHPD For Workgroups Using Ansible
 =========
 
 This project will deploy a Terraform plan that will create three (or more) Azure Linux VMs running RHEL 9.x to assist in studying for the RHCSA or RHCE certifcations.  
@@ -12,19 +12,19 @@ Instance Builds
 ------------
 |Instance|VM Instance Name|Use Case|
 |:---|---|---|
-|0|rhsca-vm-0|NFS Service for Instance #1|
-|1|rhsca-vm-1|Practice Lab Instance|
-|2|rhsca-vm-2|RHEL Media Repo/Practice Lab Instance|
-|3(or higher)|rhsca-vm-?|Generic Miscellaneous Use|
+|0|rhsca-vm-0|NFS Service for Node #1|
+|1|rhsca-vm-1|Practice Lab Node|
+|2|rhsca-vm-2|RHEL Media Repo/Lab Node|
+|3(or higher)|rhsca-vm-?|Generic Node|
 
 |Instance|VM Instance Name|Use Case|
 |:---|---|---|
 |0|rhce-vm-0|Ansible Controller|
-|1|rhce-vm-1|Practice Lab Node|
-|2|rhce-vm-2|Practicee Lab Node|
-|3|rhce-vm-3|Practice Lab Node|
-|4|rhce-vm-4|Practicee Lab Node|
-|5(or higher)|rhce-vm-?|Geneirc Miscellaneous Use|
+|1|rhce-vm-1|Practice Node|
+|2|rhce-vm-2|Practicee Node|
+|3|rhce-vm-3|Practice Node|
+|4|rhce-vm-4|Practicee Node|
+|5(or higher)|rhce-vm-?|Practice Node|
 
 
 Requirements
@@ -82,10 +82,10 @@ Playbook
 ----------------
 See playbook [here](deploy_terraform_plan.yml)
 
-Installation Instructions
+Quick Start Documentation 
 ----------------
-Red Hat Installation[docs](docs/rhel_instructions.md)
-MacOS Installation[docs](docs/macos_instructions.md)
+Red Hat [Quick Start](docs/rhel_instructions.md)  
+MacOS [Quick Start](docs/macos_instructions.md)  
 
 License
 -------
