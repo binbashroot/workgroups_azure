@@ -65,7 +65,7 @@ resource "azurerm_linux_virtual_machine" "workgroup" {
 {% if workgroup|lower == 'rhcsa' %}    
     server_type = count.index == 0 ? "{{ workgroup }}_server" : (count.index == 1 ? "{{ workgroup }}_client" : (count.index == 2 ? "{{ workgroup }}_reposerver" : (count.index > 2 ? "{{ workgroup }}_generic" : "")))
 {% elif workgroup|lower == 'rhce' %}    
-    server_type = count.index == 0 ? "{{ workgroup }}_controller" : (count.index == 1 ? "{{ workgroup }}_client" : (count.index == 2 ? "{{ workgroup }}_reposerver" : (count.index > 2 ? "{{ workgroup }}_generic" : "")))
+    server_type = count.index == 0 ? "{{ workgroup }}_controller" : (count.index >= 1 ? "{{ workgroup }}_node")
 {% endif %}
     }
 
