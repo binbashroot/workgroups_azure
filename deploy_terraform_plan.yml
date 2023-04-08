@@ -140,17 +140,17 @@
 
         - name: Block Task ** Include the deploy_rhcsa_server role **
           ansible.builtin.include_role:
-            name: deploy_rhcsa_server
+            name: playbooks/deploy_rhcsa_server
           when: inventory_hostname in groups['rhcsa_server']
 
         - name: Block Task ** Include the deploy_rhcsa_client role **
           ansible.builtin.include_role:
-            name: deploy_rhcsa_client
+            name: playbooks/deploy_rhcsa_client
           when: inventory_hostname in groups['rhcsa_client']
 
         - name: Block Task ** Include the deploy_rhcsa_reposerver role **
           ansible.builtin.include_role:
-            name: deploy_rhcsa_reposerver
+            name: playbooks/deploy_rhcsa_reposerver
           when: inventory_hostname in groups['rhcsa_reposerver']
 
         - name: Print the lab exercise url

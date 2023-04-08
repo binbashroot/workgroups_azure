@@ -1,9 +1,8 @@
-Deploy Terraform Plan With Ansible
+Deploy Terraform Plan Using Ansible
 =========
 
 This project will deploy a Terraform plan that will create three (or more) Azure Linux VMs running RHEL 9.x to assist in studying for the RHCSA or RHCE certifcations.  
 Once provisioned, the hosts will be configured as a lab with objectives to help you learn how to perform tasks with RHEL. The labs are ungraded and are only a tool to help you develop your skills. 
-
 
 **NOTE:**  
 - RHCSA Practice Labs are currently under development   
@@ -16,66 +15,33 @@ Instance Builds
 |0|rhsca-vm-0|NFS Service for Instance #1|
 |1|rhsca-vm-1|Practice Lab Instance|
 |2|rhsca-vm-2|RHEL Media Repo/Practice Lab Instance|
-|3 (or higher)|rhsca-vm-3|Generic Miscellaneous Use|
+|3(or higher)|rhsca-vm-?|Generic Miscellaneous Use|
 
 |Instance|VM Instance Name|Use Case|
 |:---|---|---|
 |0|rhce-vm-0|Ansible Controller|
-|1|rhce-vm-1|Practice Lab Instance|
-|2|rhce-vm-2|Practicee Lab Instance|
-|3 (or higher)|rhce-vm-3|Generic Miscellaneous Use|
+|1|rhce-vm-1|Practice Lab Node|
+|2|rhce-vm-2|Practicee Lab Node|
+|3|rhce-vm-3|Practice Lab Node|
+|4|rhce-vm-4|Practicee Lab Node|
+|5(or higher)|rhce-vm-?|Geneirc Miscellaneous Use|
 
 
 Requirements
 ------------
 
->**Collections:**
+**Collections:**
 >- cloud.terraform
->- azure.azcolleciton 
+>- azure.azcollection 
 >- ansible.posix
->
->**Environment:**
->- ARM_SUBSCRIPTION_ID=""
->- ARM_TENANT_ID=""
->- ARM_CLIENT_ID=""
->- ARM_CLIENT_SECRET=""
->- ARM_SKIP_PROVIDER_REGISTRATION=true
->
->**Linux**
->- sudo dnf install ansible -y
->- sudo dnf install python3 python3-pip -y
->- 
->**Python**
->- python3 -m pip install --upgrade pip
->- pip install azure-mgmt-resource --user
->- pip install azure-mgmt-resource --user
->- pip install azure-identity --user
->- pip install msrest --user
->- pip instsall msrestazure --user
->**Terraform**
->- sudo dnf clean all
->- sudo dnf makecache
->- sudo dnf install -y dnf-plugins-core
->- sudo dnf config-manager --add-repo https://rpm.releases.hashicorp.com/fedora/hashicorp.repo
->- sudo dnf install terraform -y
->**SSH:**
->- An "rsa" ssh key must be created
->- Ssh key name must be 'id_rsa_rhpds' 
->- Ssh key must reside in your user's home .ssh directory
->- - EXAMPLE: ~/.ssh/id_rsa_rhpds
->- Provisioned hosts only allow pubkey authentication
->- To Generate your key: ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa_rhpds -N ''
->
 
 Dependencies
 ------------
 >- Terraform >= 1.4.4
->- Ansible >=2.12
-
+>- Ansible >=2.13
 
 Variables
 ----------------
-
 >|Name|Type|Required|Default|Choices|
 >|:---|---|---|---|---|
 >|azure_location|string|yes|-|-|
@@ -83,7 +49,7 @@ Variables
 >|rhpds_ssh_private_key_path|string|yes|-|-|
 >|rhpds_ssh_public_key_path|string|yes|"{{ rhpds_ssh_private_key_path + '.pub' }}"|-|
 >|tf_project_dir|string|yes|terraform|-|
->|vm_count|string|yes|'3'|-|
+>|vm_count|string|yes|'{3\|5}'|-|
 >|workgroup|string|yes|-|{rhcsa\|rhce}|
 
 
@@ -116,14 +82,10 @@ Playbook
 ----------------
 See playbook [here](deploy_terraform_plan.yml)
 
-Troubleshooting
+Installation Instructions
 ----------------
-
-|Symptom|Fix|
-|:---|---|
-| Practice Lab Tasks Unreachable|Log in via ssh as  the "student" user to the reposerver and run: <br>podman restart madness|
-| deploy_terraform_plan.yml playbook fails| Rerun playbook |
-| Determine your host's public IPs| ansible-inventory -i inventory --list \|grep ansible_host |
+Red Hat Installation[docs](docs/rhel_instructions.md)
+MacOS Installation[docs](docs/macos_instructions.md)
 
 License
 -------

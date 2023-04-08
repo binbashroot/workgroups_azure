@@ -3,4 +3,3 @@ collections:
   - cloud.terraform
   - community.general
   - ansible.posix
-  - containers.podman
