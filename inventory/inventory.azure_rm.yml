@@ -8,8 +8,7 @@ conditional_groups:
   rhcsa_reposerver: tags['server_type'] == "rhcsa_reposerver"
   rhcsa_generic: tags['server_type'] == "rhcsa_generic"
   lab_core: "'generic' not in tags['server_type']"
-  rhce_controller: tags['server_type'] == 'rhce_controller'
-  rhce_node: tags['server_type'] == 'rhce_node'
+  
 
 
 hostvar_expressions:

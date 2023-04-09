@@ -102,7 +102,7 @@ resource "azurerm_public_ip" "workgroup" {
   allocation_method   = "Dynamic"
 
   tags = {
-    environment = "Production"
+    workgroup = "{{ workgroup }}"
   }
 }
 
@@ -119,7 +119,7 @@ resource "azurerm_network_security_group" "workgroup" {
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "22"
-    source_address_prefix      = "*"
+    source_address_prefix      = "{%- if allow_all_ssh is defined -%}*{%- else -%}{{ localhost_public_ip['content']|trim }}/32{% endif %}"
     destination_address_prefix = "*"
   }
   {# security_rule {
@@ -135,7 +135,7 @@ resource "azurerm_network_security_group" "workgroup" {
   # }
   #}
   security_rule {
-    name                       = "MADNESS"
+    name                       = "mkdocs"
     priority                   = 1002
     direction                  = "Inbound"
     access                     = "Allow"
@@ -146,7 +146,7 @@ resource "azurerm_network_security_group" "workgroup" {
     destination_address_prefix = "*"
   }
   tags = {
-    environment = "Production"
+    application = "mkdocs"
   }
 }
 resource "azurerm_network_interface_security_group_association" "workgroup" {

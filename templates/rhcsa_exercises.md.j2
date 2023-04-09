@@ -1,0 +1,322 @@
+# Practice Tasks for RHCSA
+**NOTE 
+> Any files in a user's home directory must be owner/group of the user
+> Unless otherwise specified, all tasks must be performed on rhcsa-vm-1
+
+
+## Perform the following tasks
+
+### Task 1
+
+#### 1.1 - Change IP
+
+Change the `eth1` interface of **VM2**. This change must persist through reboots.
+
+- IP: **10.0.2.121**
+- NETMASK: **255.255.255.0**
+- GATEWAY: **10.0.2.1**
+
+#### 1.2 - Change Hostname
+
+Change the hostname of second host **from:** serverb.example.com **to:** rhcsa-vm-1.example.com.   
+This change must persist through reboots
+
+#### 1.3 - SELinux
+
+Configure the server so SELinux is actively enforced. Ensure SELinux enforcment is persistent across a reboot.
+
+---
+
+### Task2
+
+#### 2.1 - Repos
+
+Add the following repos to the system:
+
+- [ ] BaseOS - **http://rhcsa-vm-1.example.com/repo/BaseOS**
+- [ ] AppStream - **http://rhcsa.example.comq/repo/AppStream**
+
+#### 2.2 - Web Server
+
+Install a web server
+
+- [ ] Install the `httpd` package on **rhcsa-vm-1.example.com**
+- [ ] The web services must survive a reboot
+- [ ] Validate via the following webpage **http://rhcsa-vm-1.example.com/exam/**
+
+---
+
+### Task 3
+
+#### 3.1 - Filesystem 1
+
+Create and mount a filesystem using your primary disk. The mount point must survive a reboot.
+
+- [ ] Filesystem must be **850MiB** in size  
+- [ ] Filesystem must use an **ext3** filesytem  
+- [ ] Filesystem must be mounted on **/mnt/task3**
+- [ ] Partition must be named **task3**  
+
+---
+
+### Task 4
+
+#### 4.1 - Script 1
+
+Create a script that can only be executable by root.
+
+- [ ] The script is called **task41.sh**  
+- [ ] The script must create five files in **/opt/dc**
+- [ ] The filenames are **superman**, **batman**, **aquaman**, **flash**, **wonderwoman**  
+- [ ] The script must reside in **/opt/scripts**
+- [ ] The file name extension must be "**.out**"  
+- [ ] Each file must contain the **current date and time**  
+
+#### 4.2 - Script 2
+
+Create a script that can only be executable by root.
+
+- [ ] The script is named **task42.sh**
+- [ ] The script must reside in **/opt/scripts**
+- [ ] The script must create **five** users
+  - spiderman
+  - wolverine
+  - thor
+  - hulk
+  - ironman
+- [ ] All users must be part of the **goodguys** group  
+- [ ] All users must belong to the group named "**marvel**"  
+
+Execute the script and ensure it works and verify that it has created the users/groups.  
+Your script should precheck for users and groups BEFORE and should not attempt to add users or groups that may already exist.  
+Hint: getent and $?   
+
+#### 4.3 - Script 3
+
+Create a script that can only be executable by root.
+
+- [ ] The script is named **task43.sh**
+- [ ] The script must reside in **/opt/scripts**  
+- [ ] The script must create **five** users
+  - sandman
+  - sabertooth
+  - loki
+  - thanos
+  - ultron
+- [ ] All users must be part of the **badguys** group  
+- [ ] All users must belong to a secondary group named "**marvel**"  
+
+Execute the script and ensure it works and verify that it has created the users/groups.
+
+---
+
+### Task 5
+
+#### 5.1 - Text file 1
+
+Create a text file.
+
+- [ ] The file must reside in **/home/student**
+- [ ] The file must be called **task5.txt**
+- [ ] The file must contain the partition table of the primary disk
+
+#### 5.2 - Text file 2
+
+Create a text file.
+
+- [ ] The file must reside in **/home/student**
+- [ ] The file must be called **last.out**  
+- [ ] The file must contain a list of dates/times of the historical reboots for the server
+
+#### 5.3 - Text file 3
+
+Create a text file containing specific information
+
+Run the following command as your starting point:
+```bash
+getent group marvel | cut -d: -f4 | tr , '\n'
+```
+
+- [ ] File must reside in **/home/student**
+- [ ] File must be called **marvel_tb_3.txt**
+- [ ] File must contain the top and bottom three users of the full sorted list of members of the "marvel" group
+
+---
+
+### Task 6
+
+#### 6.1 - Filesystem 2
+
+Create and mount a filesystem using your primary disk and the mount point must survive a reboot.
+
+- [ ] Filesystem must be **500MiB** in size  
+- [ ] Filesystem must use an **xfs** filesytem  
+- [ ] Filesystem must be mounted on **/mnt/task10**
+- [ ] Partition must be named **task10**
+
+---
+
+### Task 7
+
+#### 7.1 - Folder Permissions 1
+
+Create a directory and set permissions.
+
+- [ ] Create a directory called **/opt/hero**
+- [ ] The owner of the folder should be **root**  
+- [ ] The group of the folder should be **goodguys**
+- [ ] The permissions of the folder should only allow root and users in the goodguys group access to read/write files, but everyone should be able "list" files
+
+#### 7.2 - Folder Permissions 2
+
+Create a directory and set permissions.
+
+- [ ] Create a directory in /opt called **villians**  
+- [ ] The owner of the folder should be **root**  
+- [ ] The group of the folder should be **villians**  
+- [ ] The permissions of the folder should only allow root and users in the badguys group access to read/write files.
+- [ ] The root user and users in the badguys group must be able to list files but all other users should not be able to list the contents of the /opt/villians directory
+
+---
+
+### Task 8
+
+#### 8.1 - Partitions
+
+Add a two new partitions to your secondary disk
+
+- [ ] One partition must be **500MiB** in size  
+- [ ] One partition must be **250MB** in size  
+- [ ] The partition that is **250MB** should have an **ext3** filesystem  
+- [ ] The partition that is **500MiB** should have an **xfs** filesystem  
+- [ ] The ext3 filesystem should be mounted on **/mnt/task13_ext3**  
+- [ ] The xfs filesystem should be mounted on **/mnt/task13_xfs** 
+
+---
+
+### Task 9
+
+#### 9.1 - Copy Files
+
+- [ ] Copy all the files in the **/opt/test1** directory to a directory called **/opt/copied**  
+- [ ] Files must be owned by the directory owner
+- [ ] Files must belong to the group owned by the directory group
+- [ ] Files in /opt/copied must be readable by everyone  
+- [ ] Files in /opt/copied must read/write by the owner
+- [ ] Files in /opt/copied must be read/write by the group
+- [ ] The directory must be owned by student
+- [ ] The directory must be owned by goodguys group
+
+#### 9.2 - Move Files
+
+- [ ] Move all the files in **/opt/test2** to **/opt/moved**
+- [ ] Permissions of all files should be owned by **student**  
+- [ ] All files must be in the **student** group  
+- [ ] Files should be read and writeable for user and read-only for group and world
+- [ ] All users on the system should be able to list all files in the /opt/moved directory 
+
+#### 9.3 - Compressed Files
+
+- [ ] Create a compressed file called **test3.tar.gz**
+- [ ] The file must contain of all the files from **/opt/test3**
+- [ ] The compressed file must reside in **/tmp**
+- [ ] The file must use **gzip** compression  
+- [ ] The task must be completed in a single command
+- [ ] Put the command you used in a script called **/opt/scripts/task93.sh**  
+
+#### 9.4 - Find Files
+
+Find files on filesystem.
+
+- [ ] Find all files owned by **larry** and copy them to a folder called **/tmp/task17_files**
+
+---
+
+### Task 10
+
+#### 10.1 - Configure Chrony
+
+- [ ] Configure **rhcsa-vm-1.example.com** to be a ntp client of **rhcsa-vm-1.example.com**
+- [ ] Validate time has been properly synced and write results to **/tmp/time_validation.out**
+
+---
+
+### Task 11
+
+#### 11.1 - Logical Volumes
+
+Configure logical volume on **rhcsa-vm-1.example.com**
+
+- Using **/dev/sdb** do the following:
+  - [ ] Create a **1G** partition
+  - [ ] Create a **500M** logical volume and **500M** that belongs to the **rhcsavg** volume group
+
+#### 11.2 - Swap
+
+Configure swap partition on **rhcsa-vm-1.example.com** that must persist across reboots  
+
+- [ ] Create a **2G** swap partition
+
+---
+
+### Task 12
+
+#### 12.1 - Configure NFS to mount user home directories automatically
+
+- [ ] The following three users **larry**, **moe**, and **curly** must be able to automatically mount their shared directories from **rhcsa-vm-0.example.com** whenever they log into **rhcsa-vm-1.example.com**
+
+---
+
+### Task 13
+
+#### 13.1 - Configure HTTPD to use NFS
+
+Mount directory on destination host on **/var/www/html/rhcsa** that must persist across reboots.
+
+```text
+SOURCE: rhcsa-vm-0.example.com:/webfiles
+DESTINATION HOST: rhcsa-vm-1.example.com
+```
+
+- [ ] Verify URL - http://rhcsa-vm-1.example.com/rhcsa/index.html  
+
+---
+
+### Task 14
+
+#### 14.1 - Create mount as an indirect autofs mount
+
+- [ ] Configure **rhcsa-vm-1.example.com** to mount files from **rhcsa-vm-0.example.com:/share/data** to **/shares/data** whenever someone enters the /shares/data directory
+
+#### 14.2 - Create mount as an direct autofs mount
+
+Mount the following nfs share on **rhcsa-vm-1.example.com**
+
+```text
+SOURCE:  rhcsa-vm-0.example.com:/share/data2
+```
+
+- [ ] Configure **rhcsa-vm-1.example.com** to mount files from **rhcsa-vm-0.example.com:/share/data2** to **/data2** whenever /data2 is accessed
+
+---
+
+### Task 15
+
+#### 15.1 - Configure a directory to be used by multiple teams
+
+- [ ] Create the **/opt/marvel** directory
+- [ ] The directory should be owned by **student**
+- [ ] The group should be owned by **marvel**
+- [ ] Any created, copied, or moved to /opt/marvel should become automatically be owned by the marvel group.
+
+---
+
+### Task 16
+
+#### 16.1 - Configure httpd to listen on port 8888
+
+- [ ] Modify apache webserver to listen on port **8888**
+- [ ] Restart the httpd service
+- [ ] Verify URL - http://rhcsa-vm-0.example.com:8888/exam/index.html
+
+---

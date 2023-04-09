@@ -106,8 +106,8 @@
 #     state: present
 
 - name: Copy mkdocs.yml file into place
-  ansible.builtin.copy:
-    src: mkdocs.yml
+  ansible.builtin.template:
+    src: mkdocs.yml.j2
     dest: /docs/exercise/mkdocs.yml
     mode: 0644
     owner: student

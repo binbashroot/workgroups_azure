@@ -28,6 +28,7 @@ NOTE: Subsequent Azure requests will not send an invite.
 ## Preparing Your Local Resources
 
 #### Open a terminal 
+**NOTE** *Yeah we could automate this part, but then how would you learn?*
 1. Generate an ssh key to be used to access Azure
 ```bash
   ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa_rhpds -N ''
@@ -39,7 +40,7 @@ $ cd workgroup_azure
 $ git checkout devel
 ```
 
-3.  Create a yum repo for terraform
+3.  Create a dnf repo for terraform
 ```bash
     sudo tee << EOF /etc/yum.repos.d/hashicorp.repo 
     [hashicorp]
@@ -80,6 +81,7 @@ export AZURE_TENANT=${TENANT}
 export AZURE_SUBSCRIPTION_ID=${SUBSCRIPTION}
 export AZURE_RESOURCE_GROUP=${RESOURCEGROUP}
 
+# COPY THESE VARIABLES TOO
 # NEEDED FOR TERRAFORM VIA ANSIBLE
 export ARM_RESOURCE_GROUP=${RESOURCEGROUP}
 export ARM_SUBSCRIPTION_ID=${SUBSCRIPTION}

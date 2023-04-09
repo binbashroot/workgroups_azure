@@ -4,12 +4,18 @@
   connection: local
   gather_facts: false
   environment:
-    AZURE_TENANT: "{{ lookup('env','AZURE_TENANT') }}"
-    AZURE_CLIENT_ID: "{{ lookup('env','AZURE_CLIENT_ID') }}"
-    AZURE_SECRET: "{{ lookup('env','AZURE_SECRET') }}"
-    AZURE_SUBSCRIPTION_ID: "{{ lookup('env','AZURE_SUBSCRIPTION_ID') }}"
+    # AZURE_TENANT: "{{ lookup('env','AZURE_TENANT') }}"
+    # AZURE_CLIENT_ID: "{{ lookup('env','AZURE_CLIENT_ID') }}"
+    # AZURE_SECRET: "{{ lookup('env','AZURE_SECRET') }}"
+    # AZURE_SUBSCRIPTION_ID: "{{ lookup('env','AZURE_SUBSCRIPTION_ID') }}"
     ANSIBLE_AZURE_AUTH_SOURCE: env
   tasks:
+    - name: Get the public IP of the host that will connect to Azure
+      ansible.builtin.uri:
+        url: https://ifconfig.io/ip
+        return_content: true
+      register: localhost_public_ip
+
     - name: Assert that a workgroup has been defined
       ansible.builtin.assert:
         that:
@@ -64,31 +70,20 @@
                  map(attribute='endpoint')|
                  first }}
 
-    - name: Configure provider.tf file
+    - name: Create terraform files from templates
       ansible.builtin.template:
-        src: providers.tf.j2
-        dest: "{{ playbook_dir }}/{{ tf_project_dir }}/providers.tf"
+        src: "{{ template_name }}.j2"
+        dest: "{{ playbook_dir }}/{{ tf_project_dir }}/{{ template_name }}"
         mode: 0644
+      loop_control:
+        loop_var: template_name
+      loop: 
+        - providers.tf
+        - variables.tf
+        - main.tf
+        - outputs.tf
 
-    - name: Configure variable.tf file
-      ansible.builtin.template:
-        src: variables.tf.j2
-        dest: "{{ playbook_dir }}/{{ tf_project_dir }}/vars.tf"
-        mode: 0644
-
-    - name: Configure main.tf file
-      ansible.builtin.template:
-        src: main.tf.j2
-        dest: "{{ playbook_dir }}/{{ tf_project_dir }}/main.tf"
-        mode: 0644
-
-    - name: Configure outputs.tf file
-      ansible.builtin.copy:
-        src: outputs.tf
-        dest: "{{ playbook_dir }}/{{ tf_project_dir }}/outputs.tf"
-        mode: 0644
-
-    - name: Create inventory.azure_rm.yml file
+    - name: Create inventory.azure_rm.yml from a template
       ansible.builtin.template:
         src: inventory.j2
         dest: "{{ playbook_dir }}/inventory/inventory.azure_rm.yml"
@@ -105,7 +100,7 @@
         project_path: "{{ tf_project_dir }}"
       register: states
 
-    - name: Debug
+    - name: 
       ansible.builtin.debug:
         msg: "{{ states['outputs']['server_ips']['value'] }}"
       when:
@@ -138,22 +133,30 @@
         - workgroup == 'rhcsa'
       block:
 
-        - name: Block Task ** Include the deploy_rhcsa_server role **
+        - name: "[ BLOCK TASK ] ** Include the deploy_rhcsa_server role **"
           ansible.builtin.include_role:
-            name: playbooks/deploy_rhcsa_server
+            name: deploy_rhcsa_server
           when: inventory_hostname in groups['rhcsa_server']
 
-        - name: Block Task ** Include the deploy_rhcsa_client role **
+        - name: "[ BLOCK TASK ] ** Include the deploy_rhcsa_client role **"
           ansible.builtin.include_role:
-            name: playbooks/deploy_rhcsa_client
+            name: deploy_rhcsa_client
           when: inventory_hostname in groups['rhcsa_client']
 
-        - name: Block Task ** Include the deploy_rhcsa_reposerver role **
+        - name: "[ BLOCK TASK ] ** Include the deploy_rhcsa_reposerver role **"
           ansible.builtin.include_role:
-            name: playbooks/deploy_rhcsa_reposerver
+            name: deploy_rhcsa_reposerver
           when: inventory_hostname in groups['rhcsa_reposerver']
 
-        - name: Print the lab exercise url
+        - name: "[ BLOCK TASK ] Copy README to the reposerver"
+          ansible.builtin.template:
+            src: rhcsa_exercises.md.j2
+            dest: /docs/exercise/docs/rhcsa_exercises.md
+            owner: student
+            group: student
+          when: inventory_hostname in groups['rhcsa_reposerver']
+
+        - name: "[ BLOCK TASK ] Print the lab exercise url"
           ansible.builtin.debug:
             msg:
               - "#################################################"
@@ -168,6 +171,22 @@
               - "#################################################"
           when: inventory_hostname in groups['rhcsa_reposerver']
           run_once: true
+
+    - name: Slurp the student user public key
+      ansible.builtin.slurp:
+        src: /home/student/.ssh/id_rsa.pub
+      register: student_public_key
+      when: inventory_hostname in groups['rhcsa_client']
+
+    - name: Set public key fact
+      set_fact:
+        rhcsa2_public_key: "{{ hostvars['rhcsa-vm-1']['student_public_key']['content']|b64decode }}"
+
+    - name: Copy student key over to other hosts 
+      ansible.builtin.authorized_key:
+        user: student
+        state: present
+        key: "{{ lookup('vars', 'rhcsa2_public_key') }}"
 
     - name: Print Public IPs of Provisioned Hosts
       ansible.builtin.debug:
