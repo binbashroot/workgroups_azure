@@ -53,21 +53,26 @@ Variables
 >|tf_project_dir|string|yes|terraform|-|
 >|vm_count|string|yes|'{3\|5}'|-|
 >|workgroup|string|yes|-|{rhcsa\|rhce}|
-
+>|allow_all_ssh|boolean|no|-|  
+>|only_tf|boolean|no|-|  
 
 Example Syntax 
 ----------------
 ```
-Provisions a lab for RHCSA practice
+Provisions a lab for RHCSA practice.  This is the default and only allows ssh from your public IP
 ansible-playbook -i inventory deploy_terraform_plan.yml -e workgroup=rhcsa
 
-ansible-playbook -i inventory deploy_terraform_plan.yml -e workgroup=rhcsa -e vm_count=5
+Provisions a lab for RHCSA practice but opens ssh port to the world
+ansible-playbook -i inventory deploy_terraform_plan.yml -e workgroup=rhce -e allow_all_ssh=true
+
+Only peforms runs the terraform plan. Hosts are left untouched
+ansible-playbook -i inventory deploy_terraform_plan.yml -e workgroup=rhcsa -e only_tf=true
 
 
 Provisions a lab for RHCE practice
-ansible-playbook -i inventory deploy_terraform_plan.yml -e workgroup=rhcse
+ansible-playbook -i inventory deploy_terraform_plan.yml -e workgroup=rhce 
 
-ansible-playbook -i inventory deploy_terraform_plan.yml -e workgroup=rhcse -e vm_count=5
+ansible-playbook -i inventory deploy_terraform_plan.yml -e workgroup=rhce -e allow_all_ssh=true
 
 
 Provisions a lab with no practice configurations

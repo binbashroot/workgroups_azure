@@ -180,13 +180,13 @@
 
     - name: Set public key fact
       set_fact:
-        rhcsa2_public_key: "{{ hostvars['rhcsa-vm-1']['student_public_key']['content']|b64decode }}"
+        rhcsa_vm1_public_key: "{{ hostvars['rhcsa-vm-1']['student_public_key']['content']|b64decode }}"
 
     - name: Copy student key over to other hosts 
       ansible.builtin.authorized_key:
         user: student
         state: present
-        key: "{{ lookup('vars', 'rhcsa2_public_key') }}"
+        key: "{{ lookup('vars', 'rhcsa_vm1_public_key') }}"
 
     - name: Print Public IPs of Provisioned Hosts
       ansible.builtin.debug:
