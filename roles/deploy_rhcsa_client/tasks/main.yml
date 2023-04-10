@@ -70,7 +70,7 @@
     state: directory
     owner: root
     group: root
-    mode: 0600
+    mode: 0755
   loop: "{{ opt_test_dirs }}"
 
 - name: Check for existing files exist in the test directories
@@ -84,8 +84,7 @@
     content: |
       {{ lookup('password', '/dev/null chars=ascii_lowercase,digits length=28') }}
     dest: >-
-      /opt/{{ item[0]['item']['name'] }}/{{ random_string }}
-      {{ workgroup }}{{ index_number }}.{{ item[0]['item']['suffix'] }}
+      /opt/{{ item[0]['item']['name'] }}/{{ random_string + '_' + workgroup + index_number|string + '.' + item[0]['item']['suffix'] }}
     mode: 0644
     owner: nobody
     group: nobody
@@ -143,7 +142,7 @@
     state: absent
   loop:
     - /etc/yum.repos.d/redhat.repo
-    - /etc/yum.repos.d/rh-cloud-base-repo
+    - /etc/yum.repos.d/rh-cloud-base.repo
 
 - name: Set SELinux to permissiive
   ansible.builtin.lineinfile:

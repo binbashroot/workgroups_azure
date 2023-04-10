@@ -174,4 +174,13 @@
     count: 20
     units: minutes
 
+- name: Clone the exercise repo
+  ansible.builtin.git:
+    repo: "https://{{ lookup('env','GIT_USER') }}:{{ lookup('env','GIT_PASS') }}@gitlab.consulting.redhat.com/workgroup-labs/docs.git"
+    dest: /docs/exercise/docs/rhcsa
+  when: 
+    - lookup('env','GIT_USER')|length > 0
+    - lookup('env','GIT_PASS')|length > 0
+
 ...
+
