@@ -39,6 +39,7 @@
     name:
       - httpd
       - pip
+      - git
     state: present
   retries: 5
   delay: 20
@@ -160,7 +161,7 @@
 - name: Flush handlers
   ansible.builtin.meta: flush_handlers
 
-- name: Verify connectivity to Madness container
+- name: Verify connectivity to mkdocs
   ansible.builtin.uri:
     url: 'http://{{ ansible_host }}:3000'
     return_content: true
