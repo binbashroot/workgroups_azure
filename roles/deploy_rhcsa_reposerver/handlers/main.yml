@@ -12,10 +12,14 @@
     state: restarted
     enabled: true
 
-- name: restart mkdocs
+- name: Restart_mkdocs
   ansible.builtin.systemd:
-    service: mkdocs
+    name: mkdocs.service
     state: started
-    enabled: true
+    enabled: yes
+    scope: user
+  become_user: student
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/student"
 ...
 

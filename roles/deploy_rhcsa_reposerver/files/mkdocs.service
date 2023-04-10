@@ -3,10 +3,9 @@ Description=Mkdocs
 After=network.target
 
 [Service]
-WorkingDirectory=/docs/exercise
+WorkingDirectory=/home/student/exercise
 SyslogIdentifier=SocketTest
 ExecStart=/home/student/.local/bin/mkdocs serve
-User=student
 Type=simple
 
 [Install]
