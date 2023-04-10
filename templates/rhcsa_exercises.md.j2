@@ -50,11 +50,11 @@ Install a web server
 
 #### 3.1 - Filesystem 1
 
-Create and mount a filesystem using your primary disk. The mount point must survive a reboot.
+Create and mount a filesystem using /dev/sdc disk. The mount point must survive a reboot.
 
 - [ ] Filesystem must be **850MiB** in size  
 - [ ] Filesystem must use an **ext3** filesytem  
-- [ ] Filesystem must be mounted on **/mnt/task3**
+- [ ] Filesystem must be mounted on **/opt/task3**
 - [ ] Partition must be named **task3**  
 
 ---
@@ -118,7 +118,7 @@ Create a text file.
 
 - [ ] The file must reside in **/home/student**
 - [ ] The file must be called **task5.txt**
-- [ ] The file must contain the partition table of the primary disk
+- [ ] The file must contain the partition table of the /dev/sdc disk
 
 #### 5.2 - Text file 2
 
@@ -147,11 +147,11 @@ getent group marvel | cut -d: -f4 | tr , '\n'
 
 #### 6.1 - Filesystem 2
 
-Create and mount a filesystem using your primary disk and the mount point must survive a reboot.
+Create and mount a filesystem using your /dev/sdc disk and the mount point must survive a reboot.
 
 - [ ] Filesystem must be **500MiB** in size  
 - [ ] Filesystem must use an **xfs** filesytem  
-- [ ] Filesystem must be mounted on **/mnt/task10**
+- [ ] Filesystem must be mounted on **/opt/task10**
 - [ ] Partition must be named **task10**
 
 ---
@@ -189,8 +189,8 @@ Add a two new partitions to your secondary disk
 - [ ] One partition must be **250MB** in size  
 - [ ] The partition that is **250MB** should have an **ext3** filesystem  
 - [ ] The partition that is **500MiB** should have an **xfs** filesystem  
-- [ ] The ext3 filesystem should be mounted on **/mnt/task13_ext3**  
-- [ ] The xfs filesystem should be mounted on **/mnt/task13_xfs** 
+- [ ] The ext3 filesystem should be mounted on **/opt/task13_ext3**  
+- [ ] The xfs filesystem should be mounted on **/opt/task13_xfs** 
 
 ---
 
@@ -247,7 +247,7 @@ Find files on filesystem.
 
 Configure logical volume on **rhcsa-vm-1.example.com**
 
-- Using **/dev/sdb** do the following:
+- Using **/dev/sdc** do the following:
   - [ ] Create a **1G** partition
   - [ ] Create a **500M** logical volume and **500M** that belongs to the **rhcsavg** volume group
 
