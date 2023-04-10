@@ -1,2 +1,11 @@
-site_name: {{ workgroup }} Exercise Pages
+site_name: {{ workgroup | upper }} Exercise Pages
 dev_addr: 0.0.0.0:3000
+theme:
+  name: material
+extra_css:
+  - stylesheets/custom.css
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences

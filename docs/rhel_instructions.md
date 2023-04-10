@@ -26,6 +26,8 @@ NOTE: Subsequent Azure requests will not send an invite.
 9.  You will sent an email with the same information from the details page about your Azure environment.  
 
 ## Preparing Your Local Resources
+### Gitlab Access Token
+1. Create a personal access [token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) to access https://gitlab.consulting.redhat.com/rhcsa/workgroup  (Be sure to copy the token, you'll need it later on)
 
 #### Open a terminal 
 **NOTE** *Yeah we could automate this part, but then how would you learn?*
@@ -33,14 +35,14 @@ NOTE: Subsequent Azure requests will not send an invite.
 ```bash
   ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa_rhpds -N ''
 ```
-2. Clone the azure_workgroups repository to your local machine
+1. Clone the azure_workgroups repository to your local machine
 ```bash
 $ git clone git@github.com:binbashroot/workgroups_azure.git
 $ cd workgroup_azure
 $ git checkout devel
 ```
 
-3.  Create a dnf repo for terraform
+1.  Create a dnf repo for terraform
 ```bash
     sudo tee << EOF /etc/yum.repos.d/hashicorp.repo 
     [hashicorp]
@@ -51,7 +53,7 @@ $ git checkout devel
     gpgkey=https://rpm.releases.hashicorp.com/gpg
     EOF
 ```
-4. Install required rpms, collections, and python libraries
+1. Install required rpms, collections, and python libraries
 ```bash
 sudo dnf install ansible-core python3-pip terraform -y
 cd /path/to/cloned/directory
@@ -59,11 +61,13 @@ ansible-galaxy collection install -r collections/requirements.yml
 pip install -r ~/.ansible/collections/ansible_collections/azure/azcollection/requirements-azure.txt --user
 pip install oauthlib --upgrade --user
 ```
-5. Create an ".azurerc" file in your home directory(copy/paste the variables from email)
+1. Create an ".azurerc" file in your home directory(copy/paste the variables from email)
 **EXAMPLE**
 ```
 $ vi ~/.azurerc
-# (copy/paste the variables from email ~/.azurerc)
+export GITUSER=$USE_YOUR_SSO_LOGIN_ID
+export GITLAB_TOKEN=$USE_THE_TOKEN_YOU_CREATED
+
 
 # COPY VARIABLES FROM YOUR EMAIL
 export GUID=5t**
@@ -88,6 +92,7 @@ export ARM_SUBSCRIPTION_ID=${SUBSCRIPTION}
 export ARM_TENANT_ID=${TENANT}
 export ARM_CLIENT_ID=${CLIENT_ID}
 export ARM_CLIENT_SECRET=${PASSWORD}
+
 ```
 
 

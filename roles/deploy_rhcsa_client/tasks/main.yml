@@ -175,7 +175,7 @@
     group: root
     mode: 0644
 
-- name: Set a hostname specifying strategy
+- name: Set the hostname for the reposerver to a bad hostname
   ansible.builtin.hostname:
     name: serverb.example.com
     use: systemd
