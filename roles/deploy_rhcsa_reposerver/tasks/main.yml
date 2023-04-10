@@ -19,7 +19,7 @@
   retries: 5
   delay: 20
   notify:
-    - Restart_httpd
+    - restart_httpd
 
 - name: Permit traffic in default zone for mkdocs port
   ansible.posix.firewalld:
@@ -29,7 +29,7 @@
     immediate: true
   loop: "{{ reposerver_fw_port }}"
   notify:
-    - Restart_firewalld
+    - restart_firewalld
 
 - name: Permit traffic in default zone for http service
   ansible.posix.firewalld:
@@ -39,7 +39,7 @@
     immediate: true
   loop: "{{ reposerver_fw_svc }}"
   notify:
-    - Restart_firewalld
+    - restart_firewalld
 
 - name: Create a symlink from /var/www/html/repos to /mnt/repos
   ansible.builtin.file:
@@ -97,7 +97,7 @@
     group: student
     mode: 0644
   notify:
-    - restart mkdocs
+    - restart_mkdocs
 
 - name: Install mkdocs within a user home directory
   ansible.builtin.pip:
@@ -105,7 +105,7 @@
     extra_args: --user
   become_user: student
   notify:
-    - Restart_mkdocs
+    - restart_mkdocs
 
 - name: Copy over mkdocs start up script
   ansible.builtin.copy:
@@ -115,7 +115,7 @@
     group: student
     mode: 0644
   notify: 
-    - Restart_mkdocs
+    - restart_mkdocs
 
 - name: Reload systemctl
   ansible.builtin.systemd:
@@ -124,19 +124,21 @@
   become_user: student
   environment:
     XDG_RUNTIME_DIR: "/run/user/student"
+  notify: 
+    - restart_mkdocs
+
+- name: Clone the exercise repo
+  ansible.builtin.git:
+    repo: "https://{{ lookup('env','GIT_USER') }}:{{ lookup('env','GIT_PASS') }}@gitlab.consulting.redhat.com/workgroup-labs/docs.git"
+    dest: /home/student/exercise/docs/rhcsa
+    version: devel
+  become_user: student
+  when: 
+    - lookup('env','GIT_USER')|length > 0
+    - lookup('env','GIT_PASS')|length > 0
 
 - name: Flush handlers
   ansible.builtin.meta: flush_handlers
-
-- name: Verify connectivity to mkdocs
-  ansible.builtin.uri:
-    url: 'http://{{ ansible_host }}:3000'
-    return_content: true
-  register: mkdocs_results
-  delegate_to: localhost
-  failed_when: "'MkDocs' not in mkdocs_results['content']"
-  retries: 3
-  delay: 3
 
 - name: Create at job to sync the repos
   ansible.posix.at:
@@ -153,14 +155,12 @@
     count: 20
     units: minutes
 
-- name: Clone the exercise repo
-  ansible.builtin.git:
-    repo: "https://{{ lookup('env','GIT_USER') }}:{{ lookup('env','GIT_PASS') }}@gitlab.consulting.redhat.com/workgroup-labs/docs.git"
-    dest: /home/student/exercise/docs/rhcsa
-    version: devel
-  when: 
-    - lookup('env','GIT_USER')|length > 0
-    - lookup('env','GIT_PASS')|length > 0
+- name: Verify connectivity to mkdocs
+  ansible.builtin.uri:
+    url: 'http://{{ ansible_host }}:3000'
+    return_content: true
+  register: mkdocs_results
+  delegate_to: localhost
 
 ...
 

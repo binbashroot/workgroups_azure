@@ -1,25 +1,29 @@
 ---
 # handlers file for deploy_rhcsa_reposerver
-- name: Restart_httpd
+- name: Restart httpd
   ansible.builtin.systemd:
     service: httpd
     state: restarted
     enabled: true
+  listen: restart_httpd
 
-- name: Restart_firewalld
+- name: Restart firewalld
   ansible.builtin.systemd:
     service: firewalld
     state: restarted
     enabled: true
+  listen: restart_firewalld
 
-- name: Restart_mkdocs
+- name: Restart mkdocs
   ansible.builtin.systemd:
     name: mkdocs.service
-    state: started
+    state: restarted
     enabled: yes
     scope: user
   become_user: student
   environment:
     XDG_RUNTIME_DIR: "/run/user/student"
+  listen: restart_mkdocs
+
 ...
 
