@@ -116,4 +116,4 @@ Troubleshooting
 |:---|---|
 | deploy_terraform_plan.yml playbook fails| Rerun playbook |
 | Determine your host's public IPs| ansible-inventory -i inventory --list \|grep ansible_host |
-|||
+| Mkdocs is not not reachable| As the student user (NOT ROOT) run "systemctl --user restart mkdocs on rhcsa-vm-2|
