@@ -13,31 +13,18 @@
   ansible.builtin.dnf:
     name:
       - httpd
-      - pip
-      - git
     state: present
   retries: 5
   delay: 20
   notify:
     - restart_httpd
 
-- name: Permit traffic in default zone for mkdocs port
-  ansible.posix.firewalld:
-    port: "{{ item }}/tcp"
-    permanent: true
-    state: enabled
-    immediate: true
-  loop: "{{ reposerver_fw_port }}"
-  notify:
-    - restart_firewalld
-
 - name: Permit traffic in default zone for http service
   ansible.posix.firewalld:
-    service: "{{ item }}"
+    service: http
     permanent: true
     state: enabled
     immediate: true
-  loop: "{{ reposerver_fw_svc }}"
   notify:
     - restart_firewalld
 
@@ -48,121 +35,6 @@
     owner: root
     group: root
     state: link
-
-- name: Create a logical volume of 5G
-  community.general.lvol:
-    vg: rootvg
-    lv: homelv
-    size: 5G
-    resizefs: true
-
-- name: Create the exercise directory
-  ansible.builtin.file:
-    path: "{{ item }}"
-    state: directory
-    owner: student
-    group: student
-    mode: 0755
-  loop:
-    - /home/student/.config/systemd/user
-    - /home/student/exercise/docs
-
-- name: Copy mkdocs.yml file into place
-  ansible.builtin.template:
-    src: mkdocs.yml.j2
-    dest: /home/student/exercise/mkdocs.yml
-    mode: 0644
-    owner: student
-    group: student
-
-- name: Install a temporary index.md file
-  ansible.builtin.copy:
-    content: |
-      Welcome to the Red Hat Workgroups Technical Playground
-      ====
-      Welcome to the Red Hat Workgroups Technical Playground!  The goal of the Workgroups is to help 
-      Red Hatters improve their skills through practice of real world tasks to help them achieve 
-      their RHCSA, RHCE, or OCP certifcations. 
-      We would like to emphasize that the Workgropus Technical Playground site is entirely self-supported 
-      and managed by a group of collaborators. 
-
-      We believe that collaborative learning and knowledge sharing are essential to a Red Hatter's development,
-      and we strive to create a useful tool to faciliate one's learning.
-
-      For more information on how to get involved with this project reach out to soemone within the Workgroup chat 
-      rooms. 
-      
-    dest: /home/student/exercise/docs/index.md
-    owner: student
-    group: student
-    mode: 0644
-
-- name: Install mkdocs within a user home directory
-  ansible.builtin.pip:
-    name: mkdocs-material
-    extra_args: --user
-  become_user: student
-
-- name: Mkdocs systemd block 
-  block: 
-  
-    - name: Copy over mkdocs start up script
-      ansible.builtin.copy:
-        src: mkdocs.service
-        dest: /home/student/.config/systemd/user/mkdocs.service
-        owner: student 
-        group: student
-        mode: 0644
-
-    - name: Reload systemctl
-      ansible.builtin.systemd:
-        daemon_reload: true
-        scope: user
-      become_user: student
-      environment:
-        XDG_RUNTIME_DIR: "/run/user/student"
-
-    - name: Clone the exercise repo
-      ansible.builtin.git:
-        repo: "https://{{ lookup('env','GIT_USER') }}:{{ lookup('env','GIT_PASS') }}@gitlab.consulting.redhat.com/workgroup-labs/docs.git"
-        dest: /home/student/exercise/docs/rhcsa
-        version: devel
-      become_user: student
-      when: 
-        - lookup('env','GIT_USER')|length > 0
-        - lookup('env','GIT_PASS')|length > 0
-
-    - name: Start Mkdocs
-      ansible.builtin.systemd:
-        name: mkdocs.service
-        state: started
-        enabled: yes
-        scope: user
-      become_user: student
-      environment:
-        XDG_RUNTIME_DIR: "/run/user/student"
-
-    - name: Pause for 5 seconds so mkdocs can start properly
-      ansible.builtin.pause:
-        seconds: 5
-
-    - name: Verify connectivity to mkdocs
-      ansible.builtin.uri:
-        url: 'http://{{ ansible_host }}:3000'
-      delegate_to: localhost
-      become: false
-
-  rescue:
-
-    - name: Start Mkdocs
-      ansible.builtin.systemd:
-        name: mkdocs.service
-        state: restarted
-        enabled: yes
-        scope: user
-      become_user: student
-      environment:
-        XDG_RUNTIME_DIR: "/run/user/student"
 
 - name: Create at job to sync the repos
   ansible.posix.at:
@@ -180,4 +52,3 @@
     units: minutes
 
 ...
-

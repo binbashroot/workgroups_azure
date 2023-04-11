@@ -3,17 +3,11 @@ plugin: azure.azcollection.azure_rm
 plain_host_names: true
 
 conditional_groups:
-{% if workgroup|lower == 'rhcsa' %}
-  {{ workgroup }}_server: tags['server_type'] == "{{ workgroup }}_server"
-{% elif workgroup|lower == 'rhce' %}
-  {{ workgroup }}_controller: tags['server_type'] == "{{ workgroup}}_controller"
-{% endif %}
-  {{ workgroup }}_client: tags['server_type'] == "{{ workgroup }}_client"
-  {{ workgroup }}_reposerver: tags['server_type'] == "{{ workgroup }}_reposerver"
-  {{ workgroup }}_generic: tags['server_type'] == "{{ workgroup }}_generic"
-  lab_core: "'generic' not in tags['server_type']"
-  
-
+  rhcsa_client: tags['server_type'] == "rhcsa_client"
+  rhcsa_reposerver: tags['server_type'] == "rhcsa_reposerver"
+  control_servers: "'control' in tags['server_type']"
+  {{ workgroup }}_control: tags['server_type'] == "{{ workgroup}}_control"
+  {{ workgroup }}_node: tags['server_type'] == "{{ workgroup }}_node"
 
 hostvar_expressions:
   ansible_user: "'student'"

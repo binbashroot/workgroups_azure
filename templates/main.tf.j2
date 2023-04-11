@@ -49,13 +49,13 @@ resource "azurerm_network_interface" "workgroup1" {
 }
 
 resource "azurerm_linux_virtual_machine" "workgroup" {
-  name                = "${var.vm_info["workgroup"]}-vm-${count.index}"
+  name                = "${var.vm_info["workgroup"]}-vm-${count.index + 1}"
   count               = var.vm_info["count"]
   resource_group_name = var.resource_group["name"]
   location            = var.resource_group["location"]
   size                = "Standard_B4ms"
   admin_username      = var.ssh_connection["ssh_user"]
-  computer_name       = "${var.vm_info["workgroup"]}-vm-${count.index}"
+  computer_name       = "${var.vm_info["workgroup"]}-vm-${count.index + 1}"
   disable_password_authentication = true
   network_interface_ids = [
     element(azurerm_network_interface.workgroup0.*.id, count.index),
@@ -63,9 +63,11 @@ resource "azurerm_linux_virtual_machine" "workgroup" {
   ]
   tags                = { 
 {% if workgroup|lower == 'rhcsa' %}    
-    server_type = count.index == 0 ? "{{ workgroup }}_server" : (count.index == 1 ? "{{ workgroup }}_client" : (count.index == 2 ? "{{ workgroup }}_reposerver" : (count.index > 2 ? "{{ workgroup }}_generic" : "")))
+    server_type = count.index == 0 ? "{{ workgroup }}_control" : (count.index == 1 ? "{{ workgroup }}_client" : (count.index == 2 ? "{{ workgroup }}_reposerver" : (count.index > 2 ? "{{ workgroup }}_node" : "")))
 {% elif workgroup|lower == 'rhce' %}    
-    server_type = count.index == 0 ? "{{ workgroup }}_controller" : (count.index >= 1 ? "{{ workgroup }}_node")
+    server_type = count.index == 0 ? "{{ workgroup }}_control" : (count.index >= 1 ? "{{ workgroup }}_node")
+{% elif workgroup|lower == 'ocp' %}    
+    server_type = count.index == 0 ? "{{ workgroup }}_control" : (count.index >= 1 ? "{{ workgroup }}_node")
 {% endif %}
     }
 

@@ -1,0 +1,114 @@
+---
+# tasks file for deploy_mkdocs
+- name: Permit traffic in default zone for mkdocs port
+  ansible.posix.firewalld:
+    port: "3000/tcp"
+    permanent: true
+    state: enabled
+    immediate: true
+  notify:
+    - restart_firewalld
+
+- name: Create a logical volume of 5G
+  community.general.lvol:
+    vg: rootvg
+    lv: homelv
+    size: 5G
+    resizefs: true
+
+- name: Create the exercise directory for the student user
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: student
+    group: student
+    mode: 0755
+  loop:
+    - /home/student/.config/systemd/user
+    - /home/student/exercise/docs
+
+- name: Copy mkdocs.yml file into place
+  ansible.builtin.template:
+    src: mkdocs.yml.j2
+    dest: /home/student/exercise/mkdocs.yml
+    mode: 0644
+    owner: student
+    group: student
+
+- name: Install a temporary index.md file
+  ansible.builtin.template:
+    src: welcome_msg.j2
+    dest: /home/student/exercise/docs/index.md
+    owner: student
+    group: student
+    mode: 0644
+
+- name: Install mkdocs within a user home directory
+  ansible.builtin.pip:
+    name: mkdocs-material
+    extra_args: --user
+  become_user: student
+
+- name: 'Configure student user to use enable-linger'
+  ansible.builtin.command: 'loginctl enable-linger student'
+
+- name: Mkdocs systemd block 
+  block:
+  
+    - name: Copy over mkdocs start up script
+      ansible.builtin.copy:
+        src: mkdocs.service
+        dest: /home/student/.config/systemd/user/mkdocs.service
+        owner: student
+        group: student
+        mode: 0644
+
+    - name: Reload systemctl
+      ansible.builtin.systemd:
+        daemon_reload: true
+        scope: user
+      become_user: student
+      environment:
+        XDG_RUNTIME_DIR: "/run/user/student"
+
+    - name: Start Mkdocs
+      ansible.builtin.systemd:
+        name: mkdocs.service
+        state: started
+        enabled: yes
+        scope: user
+      become_user: student
+      environment:
+        XDG_RUNTIME_DIR: "/run/user/student"
+
+    - name: Pause for 5 seconds so mkdocs can start properly
+      ansible.builtin.pause:
+        seconds: 5
+
+    - name: Verify connectivity to mkdocs
+      ansible.builtin.uri:
+        url: 'http://{{ ansible_host }}:3000'
+      delegate_to: localhost
+      become: false
+
+  rescue:
+
+    - name: Start Mkdocs
+      ansible.builtin.systemd:
+        name: mkdocs.service
+        state: restarted
+        enabled: yes
+        scope: user
+      become_user: student
+      environment:
+        XDG_RUNTIME_DIR: "/run/user/student"
+
+- name: Clone the exercise repo
+  ansible.builtin.git:
+    repo: "https://{{ lookup('env','GIT_USER') }}:{{ lookup('env','GIT_PASS') }}@gitlab.consulting.redhat.com/workgroup-labs/docs.git"
+    dest: "/home/student/exercise/docs/{{ workgroup | upper }}"
+    version: devel
+  become_user: student
+  when: 
+    - lookup('env','GIT_USER')|length > 0
+    - lookup('env','GIT_PASS')|length > 0

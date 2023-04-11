@@ -22,6 +22,13 @@
       ansible.builtin.include_vars:
         file: terraform_vars.yml
 
+    - name: Ensure project directory exists
+      ansible.builtin.file:
+        path: "{{ tf_project_dir }}"
+        state: directory
+        owner: "{{ lookup('env', 'USER') }}"
+        mode: 0755
+
     - name: Create tfstate block
       block:
         - name: "[ BLOCK TASK ] - Set the storage_account_name variable"
@@ -132,7 +139,7 @@
         - name: "[ BLOCK TASK ] ** Include the deploy_rhcsa_server role **"
           ansible.builtin.include_role:
             name: deploy_rhcsa_server
-          when: inventory_hostname in groups['rhcsa_server']
+          when: inventory_hostname in groups['rhcsa_control']
 
         - name: "[ BLOCK TASK ] ** Include the deploy_rhcsa_client role **"
           ansible.builtin.include_role:
@@ -144,15 +151,57 @@
             name: deploy_rhcsa_reposerver
           when: inventory_hostname in groups['rhcsa_reposerver']
 
+
+    - name: Run RHCE block tasks
+      when:
+        - (only_tf is undefined or not only_tf|bool)
+        - workgroup == 'rhce'
+      block:
+
+        - name: "[ BLOCK TASK ] ** "
+          ansible.builtin.debug:
+            msg: "INCLUDE RHCE ROLES HERE"
+          when: inventory_hostname in groups['rhce_control']
+
+        - name: "[ BLOCK TASK ] ** "
+          ansible.builtin.debug:
+            msg: "INCLUDE RHCE ROLES HERE"
+          when: inventory_hostname in groups['rhce_node']
+
+    - name: Run OCP block tasks
+      when:
+        - (only_tf is undefined or not only_tf|bool)
+        - workgroup == 'ocp'
+      block:
+
+        - name: "[ BLOCK TASK ] ** "
+          ansible.builtin.debug:
+            msg: "INCLUDE RHCE ROLES HERE"
+          when: inventory_hostname in groups['rhce_control']
+
+        - name: "[ BLOCK TASK ] ** "
+          ansible.builtin.debug:
+            msg: "INCLUDE RHCE ROLES HERE"
+          when: inventory_hostname in groups['rhce_node']
+
+    - name: Create ssh keys for student user
+      ansible.builtin.user:
+        user: student
+        generate_ssh_key: true
+        ssh_key_bits: 4096
+        ssh_key_file: /home/student/.ssh/id_rsa
+
     - name: Slurp the student user public key
       ansible.builtin.slurp:
         src: /home/student/.ssh/id_rsa.pub
       register: student_public_key
-      when: inventory_hostname in groups['rhcsa_client']
+      when: inventory_hostname in groups[workgroup + '_control']
 
     - name: Set public key fact
       ansible.builtin.set_fact:
-        rhcsa_vm1_public_key: "{{ hostvars['rhcsa-vm-1']['student_public_key']['content'] | b64decode }}"
+        rhcsa_vm1_public_key: "{{ groups[workgroup + '_control'] |
+                                  map('extract',hostvars,'student_public_key') |
+                                  map(attribute='content') | first | b64decode }}"
 
     - name: Copy student key over to other hosts
       ansible.builtin.authorized_key:
@@ -160,21 +209,11 @@
         state: present
         key: "{{ lookup('vars', 'rhcsa_vm1_public_key') }}"
 
-    - name: Print Public IPs of Provisioned Hosts
+    - name: Print hostname and IP of all newly provisioned servers
       ansible.builtin.debug:
-        msg:
-          - "Public Ips to your Azure Servers"
-          - "{{ groups['all'] | map('extract', hostvars, 'ansible_host') }}"
-          - "#################################################"
-          - "#   Practice Exercises:"
-          - "#   http://{{ repoip }}:3000"
-          - "#################################################"
-          - "#################################################"
-          - "#################################################"
-          - "#   SSH Access to Reposerver:"
-          - "#   ssh -i ~/.ssh/id_rsa_rhpds student@{{ repoip }}"
-          - "#################################################"
+        var: groups['all'] | map('extract',hostvars)|json_query('[].[computer_name,ansible_host]')
+      delegate_to: localhost
+      become: false
       run_once: true
-      vars:
-        repoip: "{{ groups[workgroup + '_reposerver'] | map('extract', hostvars, 'ansible_host') | first }}"
+
 ...

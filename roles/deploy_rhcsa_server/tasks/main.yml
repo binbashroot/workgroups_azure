@@ -5,13 +5,14 @@
     name: "{{ packages }}"
     state: present
 
-- name: Open up firewalld so server can serve nfs
+- name: Open up firewalld so server can serve NFS and HTTP
   ansible.posix.firewalld:
-    service: nfs
+    service: "{{ item }}"
     permanent: true
     state: enabled
     immediate: true
-  notify: restart firewalld
+  loop: "{{ firewall_services }}"
+  notify: restart_firewalld
 
 - name: Set up nfs share dirs
   ansible.builtin.file:
@@ -24,7 +25,7 @@
   loop_control:
     loop_var: nfs_dir
   notify:
-    - restart nfs
+    - restart_nfs
 
 - name: Create /exports directory
   ansible.builtin.file:
@@ -98,7 +99,7 @@
     group: root
     mode: 0644
   notify:
-    - restart nfs
+    - restart_nfs
 
 - name: Configure server to be an ntp source
   ansible.builtin.lineinfile:
@@ -106,6 +107,10 @@
     regexp: '^allow(.*)$'
     line: "allow {{ ansible_default_ipv4['network'] }}/{{ ansible_default_ipv4['prefix'] }}"
   notify:
-    - restart chrony
+    - restart_chrony
+
+- name: Include the mkdocs role
+  ansible.builtin.include_role:
+    name: deploy_mkdocs
 
 ...

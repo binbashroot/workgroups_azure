@@ -95,7 +95,6 @@ export ARM_CLIENT_SECRET=${PASSWORD}
 
 ```
 
-
 6. Run the the playbook
 ```bash
 # To create a RHCSA practice lab

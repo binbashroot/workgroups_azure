@@ -1,0 +1,57 @@
+site_name: RHCSA Internal Workgroups Exercise Pages
+dev_addr: 0.0.0.0:3000
+repo_url: https://gitlab.consulting.redhat.com/workgroup-labs
+copyright: Copyright &copy; Red Hat, Inc.
+  
+theme:
+  name: material
+  
+  features:
+    - content.code.copy
+    - navigation.footer
+    - navigation.top
+  
+  palette:
+
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+extra:
+  social:
+    - icon: fontawesome/brands/redhat
+      link: https://source.redhat.com/groups/public/the_workgroups_initiative
+      name: Workgroups Initiative
+
+plugins:
+  - tags
+
+extra_css:
+  - stylesheets/custom.css
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - footnotes
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true 

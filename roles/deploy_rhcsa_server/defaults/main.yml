@@ -1,13 +1,22 @@
 ---
 # defaults file for deploy_rhcsa_server
+firewall_services:
+  - nfs
+  - http
+
 packages:
   - nfs-utils
   - glibc-langpack-en
+  - httpd
+  - pip
+  - git
+
 nfs_shares:
   - /share/data
   - /share/data2
   - /webfiles
   - /exports
+
 nfs_users:
   - name: larry
     uid: '1002'

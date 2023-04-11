@@ -1,7 +1,7 @@
 Deploy Azure RHPD For Workgroups Using Ansible
 =========
 
-## THIS CODE IS SELF-SUPPORT. ASK QUESTIONS IN THE RHCSA/RHCE WORKGROUP CHAT.
+## THIS CODE IS SELF-SUPPORT. ASK QUESTIONS IN THE RHCSA/RHCE WORKGROUP CHAT OR SLACK CHANNELS.
 
 This project will deploy a Terraform plan that will create three (or more) Azure Linux VMs running RHEL 9.x to assist in studying for the RHCSA or RHCE certifcations.  
 Once provisioned, the hosts will be configured as a lab with objectives to help you learn how to perform tasks with RHEL. The labs are ungraded and are only a tool to help you develop your skills. 
@@ -12,22 +12,32 @@ Once provisioned, the hosts will be configured as a lab with objectives to help 
 
 Instance Builds
 ------------
+#### RHCSA
 |Instance|VM Instance Name|Use Case|
 |:---|---|---|
-|0|rhsca-vm-0|NFS Service for Node #1|
-|1|rhsca-vm-1|Practice Lab Node|
-|2|rhsca-vm-2|RHEL Media Repo/Lab Node|
-|3(or higher)|rhsca-vm-?|Generic Node|
+|1|rhsca-vm-1|Control Server (NFS & MKDOCS)|
+|2|rhsca-vm-2|Client Node most exercises are performed on|
+|3|rhsca-vm-3|RHEL Media Repo & Lab Node(tbd)|
+|4(or higher)|rhsca-vm-?|Additional Node if specified|
 
+#### RHCE
 |Instance|VM Instance Name|Use Case|
 |:---|---|---|
-|0|rhce-vm-0|Ansible Controller|
-|1|rhce-vm-1|Practice Node|
-|2|rhce-vm-2|Practicee Node|
-|3|rhce-vm-3|Practice Node|
-|4|rhce-vm-4|Practicee Node|
-|5(or higher)|rhce-vm-?|Practice Node|
+|1|rhce-vm-1|Ansible Controller & MKDOCS |
+|2|rhce-vm-2|Practice Node|
+|3|rhce-vm-3|Practicee Node|
+|4|rhce-vm-4|Practice Node|
+|5|rhce-vm-5|Practicee Node|
+|6(or higher)|rhce-vm-?|Practice Node|
 
+#### OCP
+|Instance|VM Instance Name|Use Case|
+|:---|---|---|
+|1|ocp-vm-1|OCP Control & MKDOCS |
+|2|ocp-vm-2|Practice Node|
+|3|ocp-vm-3|Practice Node|
+|4|ocp-vm-4|Practice Node|
+|5(or higher)|ocp-vm-?|Practice Node|
 
 Requirements
 ------------
@@ -36,6 +46,7 @@ Requirements
 >- cloud.terraform
 >- azure.azcollection 
 >- ansible.posix
+>- community.general
 
 Dependencies
 ------------
@@ -44,17 +55,16 @@ Dependencies
 
 Variables
 ----------------
->|Name|Type|Required|Default|Choices|
->|:---|---|---|---|---|
->|azure_location|string|yes|-|-|
->|azure_resource_group|string|yes|-|-|
->|rhpds_ssh_private_key_path|string|yes|-|-|
->|rhpds_ssh_public_key_path|string|yes|"{{ rhpds_ssh_private_key_path + '.pub' }}"|-|
->|tf_project_dir|string|yes|terraform|-|
->|vm_count|string|yes|'{3\|5}'|-|
->|workgroup|string|yes|-|{rhcsa\|rhce}|
->|allow_all_ssh|boolean|no|-|  
->|only_tf|boolean|no|-|  
+| Name                       | Type    | Required | Default                          | Choices           | Notes                                                                                          |
+|----------------------------|---------|----------|----------------------------------|-------------------|------------------------------------------------------------------------------------------------|
+| azure_location             | string  | yes      | -                                | -                 | -                                                                                              |
+| azure_resource_group       | string  | yes      | -                                | -                 | -                                                                                              |
+| rhpds_ssh_private_key_path | string  | yes      | {{ rhpds_ssh_private_key_path }} | -                 | -                                                                                              |
+| tf_project_dir             | string  | yes      | terraform/{{ workgroup }}        | -                 | -                                                                                              |
+| vm_count                   | string  | yes      | See Notes                        | -                 | RHCSA=3  RHCE=5  OCP=4                                                                         |
+| workgroup                  | string  | yes      | -                                | {RHCSA\|RHCE\|OCP} | -                                                                                              |
+| allow_all_ssh              | boolean | no       | -                                | -                 | Allows you to open up ssh acls to the full internet instead of just the ip you're coming from. |
+| only_tf                    | boolean | no       | -                                | true\|false       | Only peforms Terraform build of infrastructure.  No  post provision tasks are performed.       |
 
 Example Syntax 
 ----------------
