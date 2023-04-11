@@ -17,6 +17,8 @@ Click "Order"
 8. If this is your first time ordering an Azure environment through RHPDS, you will asked to accept an invite from Microsoft. You must accept this invite before being granted Azure access. You only need to do this once.  Future Azure requests will not send an invite.
 9.  You will sent an email with the same information from the details page about your Azure environment.  
 
+### Gitlab Access Token
+1. Create a personal access [token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) to access https://gitlab.consulting.redhat.com/rhcsa/workgroup  (Be sure to copy the token, you'll need it later on)
 
 ### Instructions for:
 - MacOS
@@ -47,7 +49,8 @@ pip install oauthlib --upgrade --user
 ```
 #MACOS  TBD CONVERT VARS FOR ZSH
 $ vi ~/.azurerc
-# (copy/paste the variables from email ~/.azurerc)
+export GITUSER=$USE_YOUR_SSO_LOGIN_ID
+export GITLAB_TOKEN=$USE_THE_TOKEN_YOU_CREATED
 
 # COPY VARIABLES FROM YOUR EMAIL
 export GUID=5t**
