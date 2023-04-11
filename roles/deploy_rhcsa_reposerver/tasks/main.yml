@@ -150,6 +150,7 @@
       ansible.builtin.uri:
         url: 'http://{{ ansible_host }}:3000'
       delegate_to: localhost
+      become: false
 
   rescue:
 
