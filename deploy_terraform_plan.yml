@@ -167,9 +167,11 @@
         state: present
         key: "{{ lookup('vars', 'rhcsa_vm1_public_key') }}"
 
-    - name: Print hostname and IP  of newly provisioned servers
+    - name: Print hostname and IP of all newly provisioned servers
       ansible.builtin.debug:
         var: groups['all'] | map('extract',hostvars)|json_query('[].[computer_name,ansible_host]')
+      delegate_to: localhost
+      become: false
       run_once: true
 
 ...

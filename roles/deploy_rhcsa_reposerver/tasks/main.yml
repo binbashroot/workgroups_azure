@@ -76,9 +76,8 @@
     group: student
 
 - name: Install a temporary index.md file
-  ansible.builtin.copy:
-    content: |
-      {{ lookup('template','welcome_msg.j2') }}
+  ansible.builtin.template:
+    src: welcome_msg.j2
     dest: /home/student/exercise/docs/index.md
     owner: student
     group: student
