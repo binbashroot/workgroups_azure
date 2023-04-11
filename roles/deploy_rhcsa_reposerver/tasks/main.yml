@@ -96,49 +96,72 @@
     owner: student
     group: student
     mode: 0644
-  notify:
-    - restart_mkdocs
 
 - name: Install mkdocs within a user home directory
   ansible.builtin.pip:
     name: mkdocs-material
     extra_args: --user
   become_user: student
-  notify:
-    - restart_mkdocs
 
-- name: Copy over mkdocs start up script
-  ansible.builtin.copy:
-    src: mkdocs.service
-    dest: /home/student/.config/systemd/user/mkdocs.service
-    owner: student 
-    group: student
-    mode: 0644
-  notify: 
-    - restart_mkdocs
+- name: Mkdocs systemd block 
+  block: 
+  
+    - name: Copy over mkdocs start up script
+      ansible.builtin.copy:
+        src: mkdocs.service
+        dest: /home/student/.config/systemd/user/mkdocs.service
+        owner: student 
+        group: student
+        mode: 0644
 
-- name: Reload systemctl
-  ansible.builtin.systemd:
-    daemon_reload: true
-    scope: user
-  become_user: student
-  environment:
-    XDG_RUNTIME_DIR: "/run/user/student"
-  notify: 
-    - restart_mkdocs
+    - name: Reload systemctl
+      ansible.builtin.systemd:
+        daemon_reload: true
+        scope: user
+      become_user: student
+      environment:
+        XDG_RUNTIME_DIR: "/run/user/student"
 
-- name: Clone the exercise repo
-  ansible.builtin.git:
-    repo: "https://{{ lookup('env','GIT_USER') }}:{{ lookup('env','GIT_PASS') }}@gitlab.consulting.redhat.com/workgroup-labs/docs.git"
-    dest: /home/student/exercise/docs/rhcsa
-    version: devel
-  become_user: student
-  when: 
-    - lookup('env','GIT_USER')|length > 0
-    - lookup('env','GIT_PASS')|length > 0
+    - name: Clone the exercise repo
+      ansible.builtin.git:
+        repo: "https://{{ lookup('env','GIT_USER') }}:{{ lookup('env','GIT_PASS') }}@gitlab.consulting.redhat.com/workgroup-labs/docs.git"
+        dest: /home/student/exercise/docs/rhcsa
+        version: devel
+      become_user: student
+      when: 
+        - lookup('env','GIT_USER')|length > 0
+        - lookup('env','GIT_PASS')|length > 0
 
-- name: Flush handlers
-  ansible.builtin.meta: flush_handlers
+    - name: Start Mkdocs
+      ansible.builtin.systemd:
+        name: mkdocs.service
+        state: started
+        enabled: yes
+        scope: user
+      become_user: student
+      environment:
+        XDG_RUNTIME_DIR: "/run/user/student"
+
+    - name: Pause for 5 seconds so mkdocs can start properly
+      ansible.builtin.pause:
+        seconds: 5
+
+    - name: Verify connectivity to mkdocs
+      ansible.builtin.uri:
+        url: 'http://{{ ansible_host }}:3000'
+      delegate_to: localhost
+
+  rescue:
+
+    - name: Start Mkdocs
+      ansible.builtin.systemd:
+        name: mkdocs.service
+        state: restarted
+        enabled: yes
+        scope: user
+      become_user: student
+      environment:
+        XDG_RUNTIME_DIR: "/run/user/student"
 
 - name: Create at job to sync the repos
   ansible.posix.at:
@@ -154,13 +177,6 @@
     command: dnf update -y
     count: 20
     units: minutes
-
-- name: Verify connectivity to mkdocs
-  ansible.builtin.uri:
-    url: 'http://{{ ansible_host }}:3000'
-    return_content: true
-  register: mkdocs_results
-  delegate_to: localhost
 
 ...
 

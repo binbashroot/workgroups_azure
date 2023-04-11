@@ -4,10 +4,6 @@
   connection: local
   gather_facts: false
   environment:
-    # AZURE_TENANT: "{{ lookup('env','AZURE_TENANT') }}"
-    # AZURE_CLIENT_ID: "{{ lookup('env','AZURE_CLIENT_ID') }}"
-    # AZURE_SECRET: "{{ lookup('env','AZURE_SECRET') }}"
-    # AZURE_SUBSCRIPTION_ID: "{{ lookup('env','AZURE_SUBSCRIPTION_ID') }}"
     ANSIBLE_AZURE_AUTH_SOURCE: env
   tasks:
     - name: Get the public IP of the host that will connect to Azure
@@ -77,7 +73,7 @@
         mode: 0644
       loop_control:
         loop_var: template_name
-      loop: 
+      loop:
         - providers.tf
         - variables.tf
         - main.tf
@@ -100,7 +96,7 @@
         project_path: "{{ tf_project_dir }}"
       register: states
 
-    - name: 
+    - name: Print virtual machine IPs
       ansible.builtin.debug:
         msg: "{{ states['outputs']['server_ips']['value'] }}"
       when:
@@ -148,22 +144,6 @@
             name: deploy_rhcsa_reposerver
           when: inventory_hostname in groups['rhcsa_reposerver']
 
-        - name: "[ BLOCK TASK ] Print the lab exercise url"
-          ansible.builtin.debug:
-            msg:
-              - "#################################################"
-              - "#   Practice Exercises:"
-              - "#   http://{{ groups[workgroup + '_reposerver'] | map('extract',hostvars,'ansible_host')|first }}:3000"
-              - "#################################################"
-              - "#################################################"
-              - "#################################################"
-              - "#   SSH Access to Reposerver:"
-              - "#   ssh -i ~/.ssh/id_rsa_rhpds \"
-              - "#   student@{{ groups[workgroup + '_reposerver'] | map('extract',hostvars,'ansible_host')|first }}"
-              - "#################################################"
-          when: inventory_hostname in groups['rhcsa_reposerver']
-          run_once: true
-
     - name: Slurp the student user public key
       ansible.builtin.slurp:
         src: /home/student/.ssh/id_rsa.pub
@@ -171,10 +151,10 @@
       when: inventory_hostname in groups['rhcsa_client']
 
     - name: Set public key fact
-      set_fact:
-        rhcsa_vm1_public_key: "{{ hostvars['rhcsa-vm-1']['student_public_key']['content']|b64decode }}"
+      ansible.builtin.set_fact:
+        rhcsa_vm1_public_key: "{{ hostvars['rhcsa-vm-1']['student_public_key']['content'] | b64decode }}"
 
-    - name: Copy student key over to other hosts 
+    - name: Copy student key over to other hosts
       ansible.builtin.authorized_key:
         user: student
         state: present
@@ -184,6 +164,17 @@
       ansible.builtin.debug:
         msg:
           - "Public Ips to your Azure Servers"
-          - "{{ groups['all'] | map('extract',hostvars,'ansible_host') }}"
+          - "{{ groups['all'] | map('extract', hostvars, 'ansible_host') }}"
+          - "#################################################"
+          - "#   Practice Exercises:"
+          - "#   http://{{ repoip }}:3000"
+          - "#################################################"
+          - "#################################################"
+          - "#################################################"
+          - "#   SSH Access to Reposerver:"
+          - "#   ssh -i ~/.ssh/id_rsa_rhpds student@{{ repoip }}"
+          - "#################################################"
       run_once: true
+      vars:
+        repoip: "{{ groups[workgroup + '_reposerver'] | map('extract', hostvars, 'ansible_host') | first }}"
 ...

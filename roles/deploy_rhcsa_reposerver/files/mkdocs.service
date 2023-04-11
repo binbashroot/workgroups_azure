@@ -1,6 +1,7 @@
 [Unit]
 Description=Mkdocs
-After=network.target
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 WorkingDirectory=/home/student/exercise
@@ -9,4 +10,4 @@ ExecStart=/home/student/.local/bin/mkdocs serve
 Type=simple
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target

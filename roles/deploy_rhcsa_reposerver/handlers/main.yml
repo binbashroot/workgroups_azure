@@ -14,16 +14,5 @@
     enabled: true
   listen: restart_firewalld
 
-- name: Restart mkdocs
-  ansible.builtin.systemd:
-    name: mkdocs.service
-    state: restarted
-    enabled: yes
-    scope: user
-  become_user: student
-  environment:
-    XDG_RUNTIME_DIR: "/run/user/student"
-  listen: restart_mkdocs
-
 ...
 
