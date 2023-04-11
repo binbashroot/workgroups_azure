@@ -1,11 +1,18 @@
-- name: Deploy Configurations
+- name: Deploy Configurations for the Repo/Instructions Server
   hosts: rhcsa_reposerver
   gather_facts: true
   become: true
   tasks:
+
+    - name: Assert that a workgroup has been defined
+      ansible.builtin.assert:
+        that:
+          - workgroup is defined
+          - workgroup == 'rhcsa' or workgroup == 'rhce'
 
     - name: Include the deploy_rhcsa_reposerver role
       ansible.builtin.include_role:
         name: deploy_rhcsa_reposerver
       when: inventory_hostname in groups['rhcsa_reposerver']
 
+...

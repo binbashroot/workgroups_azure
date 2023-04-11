@@ -1,8 +1,11 @@
 variable "vm_info" {
   type = map  
   default = {
+    {% if workgroup == 'rhcsa'  %}    
     "count" = "{{ vm_count|default('3') }}"
-    "workgroup" = "{{ workgroup|default('rhcsa') }}"
+    {% elif workgroup == 'rhce'%}
+    "count" = "{{ vm_count|default('5') }}"{% endif -%}
+    "workgroup" = "{{ workgroup }}"
   }
 }
 

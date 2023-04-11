@@ -1,0 +1,50 @@
+---
+- name: DESTROY an Azure Workgroup Environment
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  environment:
+    AZURE_TENANT: "{{ lookup('env','AZURE_TENANT') }}"
+    AZURE_CLIENT_ID: "{{ lookup('env','AZURE_CLIENT_ID') }}"
+    AZURE_SECRET: "{{ lookup('env','AZURE_SECRET') }}"
+    AZURE_SUBSCRIPTION_ID: "{{ lookup('env','AZURE_SUBSCRIPTION_ID') }}"
+    ANSIBLE_AZURE_AUTH_SOURCE: env
+  tasks:
+
+    - name: Assert that a workgroup has been defined
+      ansible.builtin.assert:
+        that:
+          - workgroup is defined
+          - workgroup == 'rhcsa' or workgroup == 'rhce'
+
+    - name: Load variable files
+      ansible.builtin.include_vars:
+        file: terraform_vars.yml
+
+    - name: "Set the storage_account_name variable"
+      ansible.builtin.set_fact:
+        storage_account_name: "{{ workgroup + (azure_resource_group).split('-')[1] + 'tfstate' }}"
+
+    - name: 'Get the storage facts for our storage account'
+      azure.azcollection.azure_rm_storageaccount_info:
+        resource_group: "{{ azure_resource_group }}"
+        name: "{{ storage_account_name }}"
+        show_connection_string: true
+      register: __storage_facts
+
+    - name: "Set the access_key variable for terraform"
+      ansible.builtin.set_fact:
+        backend_access_key: >-
+          {{ __storage_facts['storageaccounts']|
+              selectattr('primary_endpoints','defined')|
+              map(attribute='primary_endpoints')|
+              selectattr('key','defined')|
+              map(attribute='key')|
+              first }}
+
+    - name: Destroy terraform plan
+      cloud.terraform.terraform:
+        project_path: "{{ playbook_dir }}/{{ tf_project_dir }}"
+        state: absent
+
+...

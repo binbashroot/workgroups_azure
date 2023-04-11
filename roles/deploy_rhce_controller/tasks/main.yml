@@ -1,0 +1,45 @@
+---
+# tasks file for deploy_rhce_controller
+- name: Install the student2 user
+  ansible.builtin.user:
+    - name: Add the student2 user 
+      ansible.builtin.user:
+        name: student2
+        comment: Student User 2
+        generate_ssh_key: true
+        password: "{{ lookup('ansible.builtin.password', '/dev/null chars=['ascii_letters', 'digits', 'punctuation'], length=20, encrypt=sha512_crypt')}}" 
+        uid: 2000
+
+    - name: Slurp the student2 users public ssh key
+      ansible.builtin.slurp:
+        src: /home/student2/.ssh/id_rsa.pub
+      register: student2_public_key
+
+    - name: Copy student2 key over to hosts for student user
+      ansible.builtin.authorized_key:
+        user: student
+        state: present
+        key: "{{ student2_public_key['content'] | b64decode }}"
+
+    - name: Create an .ansible.cfg for the student2 user
+      ansible.builtin.copy:
+        content: |
+          [defaults]
+          inventory = inventory
+          gathering = explicit
+          host_key_checking = false
+          remote_user =  student1
+
+          [ssh_connection]
+          ssh_args = -C -o ControlMaster=auto -o ControlPersist=60s -o UserKnownHostsFile=/dev/null
+          pipelining = True
+
+
+    - name: Install ansible, ansible-navigator, and ansible-builder for the student2 user
+      ansible.builin.pip:
+        name:
+          - ansible-builder
+          - ansible-navigator
+        extra_args: --user
+
+    - name: 

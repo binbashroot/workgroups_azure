@@ -65,7 +65,7 @@ resource "azurerm_linux_virtual_machine" "workgroup" {
 {% if workgroup|lower == 'rhcsa' %}    
     server_type = count.index == 0 ? "{{ workgroup }}_server" : (count.index == 1 ? "{{ workgroup }}_client" : (count.index == 2 ? "{{ workgroup }}_reposerver" : (count.index > 2 ? "{{ workgroup }}_generic" : "")))
 {% elif workgroup|lower == 'rhce' %}    
-    server_type = count.index == 0 ? "{{ workgroup }}_controller" : (count.index == 1 ? "{{ workgroup }}_client" : (count.index == 2 ? "{{ workgroup }}_reposerver" : (count.index > 2 ? "{{ workgroup }}_generic" : "")))
+    server_type = count.index == 0 ? "{{ workgroup }}_controller" : (count.index >= 1 ? "{{ workgroup }}_node")
 {% endif %}
     }
 
@@ -102,7 +102,7 @@ resource "azurerm_public_ip" "workgroup" {
   allocation_method   = "Dynamic"
 
   tags = {
-    environment = "Production"
+    workgroup = "{{ workgroup }}"
   }
 }
 
@@ -119,33 +119,34 @@ resource "azurerm_network_security_group" "workgroup" {
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "22"
-    source_address_prefix      = "*"
+    source_address_prefix      = "{%- if allow_all_ssh is defined -%}*{%- else -%}{{ localhost_public_ip['content']|trim }}/32{% endif %}"
     destination_address_prefix = "*"
   }
+  {# security_rule {
+  #   name                       = "HTTP"
+  #   priority                   = 1003
+  #   direction                  = "Inbound"
+  #   access                     = "Allow"
+  #   protocol                   = "Tcp"
+  #   source_port_range          = "*"
+  #   destination_port_range     = "80"
+  #   source_address_prefix      = "*"
+  #   destination_address_prefix = "*"
+  # }
+  #}
   security_rule {
-    name                       = "HTTP"
-    priority                   = 1003
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "80"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-  security_rule {
-    name                       = "HTTPS"
+    name                       = "mkdocs"
     priority                   = 1002
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = "443"
+    destination_port_range     = "3000"
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
   tags = {
-    environment = "Production"
+    application = "mkdocs"
   }
 }
 resource "azurerm_network_interface_security_group_association" "workgroup" {

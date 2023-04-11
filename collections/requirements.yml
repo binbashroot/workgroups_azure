@@ -1,3 +1,5 @@
 collections:
   - azure.azcollection
   - cloud.terraform
+  - community.general
+  - ansible.posix

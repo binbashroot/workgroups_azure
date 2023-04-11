@@ -1,2 +1,13 @@
 ---
 # defaults file for deploy_rhcsa_reposerver
+reposerver_fw_port:
+  - '3000'
+
+reposerver_fw_svc:
+  - http
+
+reposync_repos:
+  - name: BaseOS
+    repoid: rhel-9-for-x86_64-baseos-rhui-rpms
+  - name: AppStream
+    repoid: rhel-9-for-x86_64-appstream-rhui-rpms

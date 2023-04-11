@@ -1,8 +1,14 @@
-- name: Deploy Configurations
+- name: Deploy Configurations for the NFS server
   hosts: rhcsa_server
   gather_facts: true
   become: true
   tasks:
+
+    - name: Assert that a workgroup has been defined
+      ansible.builtin.assert:
+        that:
+          - workgroup is defined
+          - workgroup == 'rhcsa' or workgroup == 'rhce'
 
     - name: Include the deploy_rhcsa_server role
       ansible.builtin.include_role:

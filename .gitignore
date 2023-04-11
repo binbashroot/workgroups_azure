@@ -1,2 +1,5 @@
-tmp/
-terraform/
+tmp/*
+!tmp/README.md
+terraform/*.tf
+terraform/.terraform
+terraform/.terraform.lock.hcl

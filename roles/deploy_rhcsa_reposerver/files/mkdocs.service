@@ -1,0 +1,13 @@
+[Unit]
+Description=Mkdocs
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+WorkingDirectory=/home/student/exercise
+SyslogIdentifier=SocketTest
+ExecStart=/home/student/.local/bin/mkdocs serve
+Type=simple
+
+[Install]
+WantedBy=default.target

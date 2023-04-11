@@ -6,3 +6,12 @@
 {{ hostvars[host]['ansible_facts']['eth0']['ipv4']['address'] }} reposerver.example.com
 {% endfor %}
 {% endif %}
+{% if groups['rhcsa_client'] is defined %}
+{% for host in groups['rhcsa_client'] %}
+{% if 'serverb' in hostvars[host]['ansible_facts']['hostname'] %} 
+{{ hostvars[host]['ansible_facts']['eth0']['ipv4']['address'] }} rhcsa-vm-1 rhcsa-vm-1.example.com
+{% elif 'rhcsa-vm-1' in hostvars[host]['ansible_facts']['hostname'] %}
+{{ hostvars[host]['ansible_facts']['eth0']['ipv4']['address'] }} serverb serverb.example.com
+{% endif %}
+{% endfor %}
+{% endif %}

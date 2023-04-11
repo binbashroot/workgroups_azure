@@ -7,6 +7,9 @@ conditional_groups:
   rhcsa_client: tags['server_type'] == "rhcsa_client"
   rhcsa_reposerver: tags['server_type'] == "rhcsa_reposerver"
   rhcsa_generic: tags['server_type'] == "rhcsa_generic"
+  lab_core: "'generic' not in tags['server_type']"
+  
+
 
 hostvar_expressions:
   ansible_user: "'student'"

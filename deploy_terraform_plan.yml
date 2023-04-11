@@ -1,14 +1,17 @@
 ---
-- name: Deploy an Azure Workgroup Environment 
+- name: Deploy an Azure Workgroup Environment
   hosts: localhost
+  connection: local
   gather_facts: false
   environment:
-    AZURE_TENANT: "{{ lookup('env','AZURE_TENANT') }}"
-    AZURE_CLIENT_ID: "{{ lookup('env','AZURE_CLIENT_ID') }}"
-    AZURE_SECRET: "{{ lookup('env','AZURE_SECRET') }}"
-    AZURE_SUBSCRIPTION_ID: "{{ lookup('env','AZURE_SUBSCRIPTION_ID') }}"
     ANSIBLE_AZURE_AUTH_SOURCE: env
   tasks:
+    - name: Get the public IP of the host that will connect to Azure
+      ansible.builtin.uri:
+        url: https://ifconfig.io/ip
+        return_content: true
+      register: localhost_public_ip
+
     - name: Assert that a workgroup has been defined
       ansible.builtin.assert:
         that:
@@ -17,15 +20,13 @@
 
     - name: Load variable files
       ansible.builtin.include_vars:
-        dir: vars
-        extensions:
-          - 'yml'
+        file: terraform_vars.yml
 
     - name: Create tfstate block
       block:
         - name: "[ BLOCK TASK ] - Set the storage_account_name variable"
           ansible.builtin.set_fact:
-            storage_account_name: "{{ workgroup + 'tfstate' }}"
+            storage_account_name: "{{ workgroup + (azure_resource_group).split('-')[1] + 'tfstate' }}"
 
         - name: "[ BLOCK TASK ] - Create storage account for terraform state file"
           azure.azcollection.azure_rm_storageaccount:
@@ -65,31 +66,20 @@
                  map(attribute='endpoint')|
                  first }}
 
-    - name: Configure provider.tf file
+    - name: Create terraform files from templates
       ansible.builtin.template:
-        src: providers.tf.j2
-        dest: "{{ playbook_dir }}/{{ tf_project_dir }}/providers.tf"
+        src: "{{ template_name }}.j2"
+        dest: "{{ playbook_dir }}/{{ tf_project_dir }}/{{ template_name }}"
         mode: 0644
+      loop_control:
+        loop_var: template_name
+      loop:
+        - providers.tf
+        - variables.tf
+        - main.tf
+        - outputs.tf
 
-    - name: Configure variable.tf file
-      ansible.builtin.template:
-        src: variables.tf.j2
-        dest: "{{ playbook_dir }}/{{ tf_project_dir }}/vars.tf"
-        mode: 0644
-
-    - name: Configure main.tf file
-      ansible.builtin.template:
-        src: main.tf.j2
-        dest: "{{ playbook_dir }}/{{ tf_project_dir }}/main.tf"
-        mode: 0644
-
-    - name: Configure outputs.tf file
-      ansible.builtin.copy:
-        src: outputs.tf
-        dest: "{{ playbook_dir }}/{{ tf_project_dir }}/outputs.tf"
-        mode: 0644
-
-    - name: Create inventory.azure_rm.yml file
+    - name: Create inventory.azure_rm.yml from a template
       ansible.builtin.template:
         src: inventory.j2
         dest: "{{ playbook_dir }}/inventory/inventory.azure_rm.yml"
@@ -106,48 +96,85 @@
         project_path: "{{ tf_project_dir }}"
       register: states
 
-    - name: Set fact
-      ansible.builtin.set_fact:
-        workgroup_public_ips: "{{ states['outputs']['server_ips']['value'] }}"
-
-    - name: Debug stuff
+    - name: Print virtual machine IPs
       ansible.builtin.debug:
-        var: workgroup_public_ips
+        msg: "{{ states['outputs']['server_ips']['value'] }}"
+      when:
+        - (only_tf is defined and only_tf|bool)
 
-    - name: Wait 300 seconds for port 22 to become open 
-      wait_for:
+    - name: Wait 300 seconds for port 22 to become open
+      ansible.builtin.wait_for:
         port: 22
         host: "{{ item }}"
-      loop: "{{ workgroup_public_ips }}"
+      loop: "{{ states['outputs']['server_ips']['value'] }}"
 
     - name: Refresh the dynamic inventory
       ansible.builtin.meta: refresh_inventory
-      
-- hosts: all
+
+- name: Run Post Provision Tasks and Roles
+  hosts: all
   gather_facts: true
   become: true
   tasks:
 
-    - name: Add hosts to /etc/hosts file
+    - name: Add all hosts to /etc/hosts file of each server
       ansible.builtin.blockinfile:
         block: "{{ lookup('template', 'etc_hosts_entries.j2') }}"
         path: /etc/hosts
         backup: true
-        
-    - name: Include the deploy_rhcsa_server role
-      ansible.builtin.include_role:
-        name: deploy_rhcsa_server
-      when: inventory_hostname in groups['rhcsa_server']
 
-    - name: Include the deploy_rhcsa_client role
-      ansible.builtin.include_role:
-        name: deploy_rhcsa_client
+    - name: Run RHCSA block tasks
+      when:
+        - (only_tf is undefined or not only_tf|bool)
+        - workgroup == 'rhcsa'
+      block:
+
+        - name: "[ BLOCK TASK ] ** Include the deploy_rhcsa_server role **"
+          ansible.builtin.include_role:
+            name: deploy_rhcsa_server
+          when: inventory_hostname in groups['rhcsa_server']
+
+        - name: "[ BLOCK TASK ] ** Include the deploy_rhcsa_client role **"
+          ansible.builtin.include_role:
+            name: deploy_rhcsa_client
+          when: inventory_hostname in groups['rhcsa_client']
+
+        - name: "[ BLOCK TASK ] ** Include the deploy_rhcsa_reposerver role **"
+          ansible.builtin.include_role:
+            name: deploy_rhcsa_reposerver
+          when: inventory_hostname in groups['rhcsa_reposerver']
+
+    - name: Slurp the student user public key
+      ansible.builtin.slurp:
+        src: /home/student/.ssh/id_rsa.pub
+      register: student_public_key
       when: inventory_hostname in groups['rhcsa_client']
 
-    # - name: Include the deploy_rhcsa_server role
-    #   ansible.builtin.include_role:
-    #     name: deploy_rhcsa_repo
-    #   when: inventory_hostname in groups['rhcsa_repo']
+    - name: Set public key fact
+      ansible.builtin.set_fact:
+        rhcsa_vm1_public_key: "{{ hostvars['rhcsa-vm-1']['student_public_key']['content'] | b64decode }}"
 
+    - name: Copy student key over to other hosts
+      ansible.builtin.authorized_key:
+        user: student
+        state: present
+        key: "{{ lookup('vars', 'rhcsa_vm1_public_key') }}"
 
+    - name: Print Public IPs of Provisioned Hosts
+      ansible.builtin.debug:
+        msg:
+          - "Public Ips to your Azure Servers"
+          - "{{ groups['all'] | map('extract', hostvars, 'ansible_host') }}"
+          - "#################################################"
+          - "#   Practice Exercises:"
+          - "#   http://{{ repoip }}:3000"
+          - "#################################################"
+          - "#################################################"
+          - "#################################################"
+          - "#   SSH Access to Reposerver:"
+          - "#   ssh -i ~/.ssh/id_rsa_rhpds student@{{ repoip }}"
+          - "#################################################"
+      run_once: true
+      vars:
+        repoip: "{{ groups[workgroup + '_reposerver'] | map('extract', hostvars, 'ansible_host') | first }}"
 ...
