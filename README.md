@@ -1,7 +1,7 @@
 Deploy Azure RHPD For Workgroups Using Ansible
 =========
 
-## THIS CODE IS SELF-SUPPORT. ASK QUESTIONS IN THE RHCSA/RHCE WORKGROUP CHAT.
+## THIS CODE IS SELF-SUPPORT. ASK QUESTIONS IN THE RHCSA/RHCE WORKGROUP CHAT OR SLACK CHANNELS.
 
 This project will deploy a Terraform plan that will create three (or more) Azure Linux VMs running RHEL 9.x to assist in studying for the RHCSA or RHCE certifcations.  
 Once provisioned, the hosts will be configured as a lab with objectives to help you learn how to perform tasks with RHEL. The labs are ungraded and are only a tool to help you develop your skills. 
@@ -36,6 +36,7 @@ Requirements
 >- cloud.terraform
 >- azure.azcollection 
 >- ansible.posix
+>- community.general
 
 Dependencies
 ------------

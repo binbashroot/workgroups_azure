@@ -180,11 +180,5 @@
     name: serverb.example.com
     use: systemd
 
-- name: Create ssh keys for student user
-  ansible.builtin.user:
-    user: student
-    generate_ssh_key: true
-    ssh_key_bits: 4096
-    ssh_key_file: /home/student/.ssh/id_rsa
 
 ...

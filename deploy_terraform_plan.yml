@@ -144,6 +144,13 @@
             name: deploy_rhcsa_reposerver
           when: inventory_hostname in groups['rhcsa_reposerver']
 
+    - name: Create ssh keys for student user
+      ansible.builtin.user:
+        user: student
+        generate_ssh_key: true
+        ssh_key_bits: 4096
+        ssh_key_file: /home/student/.ssh/id_rsa
+
     - name: Slurp the student user public key
       ansible.builtin.slurp:
         src: /home/student/.ssh/id_rsa.pub
@@ -160,21 +167,9 @@
         state: present
         key: "{{ lookup('vars', 'rhcsa_vm1_public_key') }}"
 
-    - name: Print Public IPs of Provisioned Hosts
+    - name: Print hostname and IP  of newly provisioned servers
       ansible.builtin.debug:
-        msg:
-          - "Public Ips to your Azure Servers"
-          - "{{ groups['all'] | map('extract', hostvars, 'ansible_host') }}"
-          - "#################################################"
-          - "#   Practice Exercises:"
-          - "#   http://{{ repoip }}:3000"
-          - "#################################################"
-          - "#################################################"
-          - "#################################################"
-          - "#   SSH Access to Reposerver:"
-          - "#   ssh -i ~/.ssh/id_rsa_rhpds student@{{ repoip }}"
-          - "#################################################"
+        var: groups['all'] | map('extract',hostvars)|json_query('[].[computer_name,ansible_host]')
       run_once: true
-      vars:
-        repoip: "{{ groups[workgroup + '_reposerver'] | map('extract', hostvars, 'ansible_host') | first }}"
+
 ...

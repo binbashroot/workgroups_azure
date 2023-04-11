@@ -78,20 +78,7 @@
 - name: Install a temporary index.md file
   ansible.builtin.copy:
     content: |
-      Welcome to the Red Hat Workgroups Technical Playground
-      ====
-      Welcome to the Red Hat Workgroups Technical Playground!  The goal of the Workgroups is to help 
-      Red Hatters improve their skills through practice of real world tasks to help them achieve 
-      their RHCSA, RHCE, or OCP certifcations. 
-      We would like to emphasize that the Workgropus Technical Playground site is entirely self-supported 
-      and managed by a group of collaborators. 
-
-      We believe that collaborative learning and knowledge sharing are essential to a Red Hatter's development,
-      and we strive to create a useful tool to faciliate one's learning.
-
-      For more information on how to get involved with this project reach out to soemone within the Workgroup chat 
-      rooms. 
-      
+      {{ lookup('template','welcome_msg.j2') }}
     dest: /home/student/exercise/docs/index.md
     owner: student
     group: student
@@ -103,14 +90,17 @@
     extra_args: --user
   become_user: student
 
+- name: 'Configure student user to use enable-linger'
+  ansible.builtin.command: 'loginctl enable-linger student'
+
 - name: Mkdocs systemd block 
-  block: 
+  block:
   
     - name: Copy over mkdocs start up script
       ansible.builtin.copy:
         src: mkdocs.service
         dest: /home/student/.config/systemd/user/mkdocs.service
-        owner: student 
+        owner: student
         group: student
         mode: 0644
 
@@ -180,4 +170,3 @@
     units: minutes
 
 ...
-
