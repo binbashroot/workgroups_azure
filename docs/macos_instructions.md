@@ -18,8 +18,7 @@ Click "Order"
 9.  You will sent an email with the same information from the details page about your Azure environment.  
 
 ### Gitlab Access Token
-1. Create a personal access [token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) to access https://gitlab.consulting.redhat.com/rhcsa/workgroup  (Be sure to copy the token, you'll need it later on)
-
+1. Create a personal access [token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) so you can clone the necessary repositories from gitlab.consulting.redhat.com.(Be sure to copy the token, you'll need it later on)
 ### Instructions for:
 - MacOS
 ***Note:***  

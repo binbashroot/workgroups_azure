@@ -27,7 +27,7 @@ NOTE: Subsequent Azure requests will not send an invite.
 
 ## Preparing Your Local Resources
 ### Gitlab Access Token
-1. Create a personal access [token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) to access https://gitlab.consulting.redhat.com/rhcsa/workgroup  (Be sure to copy the token, you'll need it later on)
+1. Create a personal access [token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) so you can clone the necessary repositories from gitlab.consulting.redhat.com.(Be sure to copy the token, you'll need it later on)
 
 #### Open a terminal 
 **NOTE** *Yeah we could automate this part, but then how would you learn?*
