@@ -105,7 +105,7 @@
 
 - name: Clone the exercise repo
   ansible.builtin.git:
-    repo: "https://{{ lookup('env','GIT_USER') }}:{{ lookup('env','GIT_PASS') }}@gitlab.consulting.redhat.com/workgroup-labs/docs.git"
+    repo: "https://{{ lookup('env','GIT_USER') }}:{{ lookup('env','GIT_PASS') }}@gitlab.consulting.redhat.com/workgroup-labs/{{ workgroup }}-docs.git"
     dest: "/home/student/exercise/docs/{{ workgroup | upper }}"
     version: devel
   become_user: student
