@@ -24,3 +24,6 @@ nfs_users:
     uid: '1003'
   - name: curly
     uid: '1004'
+
+user_with_pass_allow: 
+  - shemp

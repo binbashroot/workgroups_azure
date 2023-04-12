@@ -4,7 +4,16 @@ Quick Start Instructions
 - RHEL9
 - FEDORA37  
 ***Note:***  
-Other variants should work but will need minor adjustments to the code
+Other variants should work but may need minor adjustments to the code
+1. Order your Azure Open Evironment
+2. Create a personal access token or ssh key  for Gitlab
+3. Generate an ssh key for use with your labs
+4. Clone the workgroups_in_azure repo from the internal Gitlab server
+5. Install the Terraform dnf repository
+6. Install required packages and collections
+
+
+
 
 ## Ordering your Azure Open Environment
 ### Using your web browser, order your Azure Open Environment
@@ -21,8 +30,7 @@ Click Checkbox
 Click "Order"
 6. You will be presented with a "[Provision Pending](images/provisionpending.png)" page. (This takes about 5 minutes)
 7. When your provising is completed you will be presented with a [Details](images/detailspage.png) page.
-8. If this is your first time ordering an Azure environment through RHPDS, you will asked to accept an invite from Microsoft. You must accept this invite before being granted Azure access. You only need to do this once.  
-NOTE: Subsequent Azure requests will not send an invite.
+> If this is your first time ordering an Azure environment through RHPDS, you will asked to accept an invite from Microsoft. You must accept this invite before being granted Azure access. You only need to do this once.  
 9.  You will sent an email with the same information from the details page about your Azure environment.  
 
 ## Preparing Your Local Resources
@@ -35,25 +43,25 @@ NOTE: Subsequent Azure requests will not send an invite.
 ```bash
   ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa_rhpds -N ''
 ```
-1. Clone the azure_workgroups repository to your local machine
+2. Clone the azure_workgroups repository to your local machine
 ```bash
 $ git clone git@github.com:binbashroot/workgroups_azure.git
 $ cd workgroup_azure
 $ git checkout devel
 ```
 
-1.  Create a dnf repo for terraform
+3.  Create a dnf repo for terraform
 ```bash
-    sudo tee << EOF /etc/yum.repos.d/hashicorp.repo 
-    [hashicorp]
-    name=Hashicorp Stable - \$basearch
-    baseurl=https://rpm.releases.hashicorp.com/RHEL/\$releasever/\$basearch/stable
-    enabled=1
-    gpgcheck=1
-    gpgkey=https://rpm.releases.hashicorp.com/gpg
-    EOF
+$ sudo tee << EOF /etc/yum.repos.d/hashicorp.repo 
+[hashicorp]
+name=Hashicorp Stable - \$basearch
+baseurl=https://rpm.releases.hashicorp.com/RHEL/\$releasever/\$basearch/stable
+enabled=1
+gpgcheck=1
+gpgkey=https://rpm.releases.hashicorp.com/gpg
+EOF
 ```
-1. Install required rpms, collections, and python libraries
+4. Install required rpms, collections, and python libraries
 ```bash
 sudo dnf install ansible-core python3-pip terraform -y
 cd /path/to/cloned/directory
@@ -61,15 +69,15 @@ ansible-galaxy collection install -r collections/requirements.yml
 pip install -r ~/.ansible/collections/ansible_collections/azure/azcollection/requirements-azure.txt --user
 pip install oauthlib --upgrade --user
 ```
-1. Create an ".azurerc" file in your home directory(copy/paste the variables from email)
+5. Create an ".azurerc" file in your home directory(copy/paste the variables from email)
 **EXAMPLE**
 ```
 $ vi ~/.azurerc
-export GITUSER=$USE_YOUR_SSO_LOGIN_ID
-export GITLAB_TOKEN=$USE_THE_TOKEN_YOU_CREATED
+export GIT_USER=$USE_YOUR_SSO_LOGIN_ID
+export GIT_PASS=$USE_THE_TOKEN_YOU_CREATED
 
 
-# COPY VARIABLES FROM YOUR EMAIL
+# COPIED VARIABLES FROM YOUR EMAIL
 export GUID=5t**
 export CLIENT_ID=7250db1a-****-****-****-************
 export PASSWORD=9rPBQJA~*******-*****************-
@@ -77,16 +85,13 @@ export TENANT=1ce7852f-****-****-****-************
 export SUBSCRIPTION=ede7f891-****-****-****-************
 export RESOURCEGROUP=openenv-5t***
 
-# COPY THESE VARIABLES TOO
-# NEEDED FOR ANSIBLE 
+# YOU NEED EVERYTHING BELOW FOR ANSIBLE AND TERRAFORM
 export AZURE_CLIENT_ID=${CLIENT_ID}
 export AZURE_SECRET=${PASSWORD}
 export AZURE_TENANT=${TENANT}
 export AZURE_SUBSCRIPTION_ID=${SUBSCRIPTION}
 export AZURE_RESOURCE_GROUP=${RESOURCEGROUP}
 
-# COPY THESE VARIABLES TOO
-# NEEDED FOR TERRAFORM VIA ANSIBLE
 export ARM_RESOURCE_GROUP=${RESOURCEGROUP}
 export ARM_SUBSCRIPTION_ID=${SUBSCRIPTION}
 export ARM_TENANT_ID=${TENANT}
@@ -94,16 +99,19 @@ export ARM_CLIENT_ID=${CLIENT_ID}
 export ARM_CLIENT_SECRET=${PASSWORD}
 
 ```
-
-6. Run the the playbook
+6. Source your .azurerc
 ```bash
-# To create a RHCSA practice lab
+source ~/.azurerc
+```
+7. Run the the playbook
+```bash
+# To create an RHCSA practice lab
 ansible-playbook -i inventory deploy_terraform_play.yml -e workgroup=rhcsa 
 
 # To provision basic servers with no modifications
 ansible-playbook -i inventory deploy_terraform_play.yml -e workgroup=rhcsa  -e only_tf=true
 
-# To deprovision the environment
+# To deprovision the environment(this blows everything away)
 ansible-playbook -i inventory DESTROY_TERRAFORM_BUILD.yml -e workgroup=rhcsa 
 
 ```

@@ -51,4 +51,13 @@
     count: 20
     units: minutes
 
+- name: Install an sshd config for users with password allowed
+  ansible.builtin.template:
+    src: '02-shemp.conf.j2'
+    dest: /etc/ssh/sshd.config.d/02-shemp.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart_sshd
+
 ...

@@ -1,0 +1,5 @@
+{% for user in user_with_pass_allowed %}
+Match User {{ user }} 
+        PasswordAuthentication yes
+        AllowUsers {{ user }}@10.0.1.*
+{% endfor %}

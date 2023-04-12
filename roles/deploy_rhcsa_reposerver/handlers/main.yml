@@ -14,5 +14,12 @@
     enabled: true
   listen: restart_firewalld
 
+- name: Restart sshd
+  ansible.builtin.systemd:
+    service: sshd
+    state: restarted
+    enabled: true
+  listen: restart_sshd
+
 ...
 
